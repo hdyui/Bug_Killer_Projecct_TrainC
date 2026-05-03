@@ -129,7 +129,9 @@ void   printSuccess(const char *msg);
 void   printError(const char *msg);
 void   printStatus(int status);
 void   formatMoney(double amount, char *buffer);
-
+int    validateServices(void);
+int    validateCustomers(void);
+int    validateOrders(void);
 
 /* fileio */
 int    saveCustomers(void);
@@ -524,12 +526,78 @@ void formatMoney(double amount, char *buffer) {
     strcat(buffer, " VND"); // Dùng strcat để nối cụm " VND" vào sau số tiền từ buffer
 }
 
+int validateServices(void) {
+    for (int i = 0; i < serviceCount; i++) {
+
+        // ID không rỗng
+        if (strlen(services[i].serviceId) == 0)
+            return 0;
+
+        // Name không rỗng
+        if (strlen(services[i].name) == 0)
+            return 0;
+
+        // Giá phải > 0
+        if (services[i].unitPrice <= 0)
+            return 0;
+
+        // isActive phải là 0 hoặc 1
+        if (services[i].isActive != 0 && services[i].isActive != 1)
+            return 0;
+    }
+    return 1;
+}
+
+int validateCustomers(void) {
+    for (int i = 0; i < customerCount; i++) {
+
+        if (!isValidName(customers[i].fullName))
+            return 0;
+
+        if (!isValidPhone(customers[i].phoneNumber))
+            return 0;
+
+        if (!isValidPlate(customers[i].carPlate))
+            return 0;
+
+        if (!isValidName(customers[i].carType))
+            return 0;
+    }
+    return 1;
+}
+
+int validateOrders(void) {
+    for (int i = 0; i < orderCount; i++) {
+
+        if (strlen(orders[i].orderId) == 0)
+            return 0;
+
+        if (!isValidPhone(orders[i].customerPhone))
+            return 0;
+
+        if (orders[i].status < 0 || orders[i].status > 2)
+            return 0;
+
+        if (orders[i].itemCount < 0 || orders[i].itemCount > MAX_ITEMS_PER_ORDER)
+            return 0;
+
+        if (orders[i].totalAmount < 0)
+            return 0;
+    }
+    return 1;
+}
+
 /* =========================================================
  * SECTION 6: FILE I/O
  * ========================================================= */
 
 int saveCustomers(void) {
-    FILE *fp = fopen(FILE_CUSTOMERS, "w");
+	if (!validateCustomers()) {
+        printError("Du lieu khach hang khong hop le!");
+        return 0;
+    }
+	
+	FILE *fp = fopen(FILE_CUSTOMERS, "w");
 
     if (!fp) {
         printError("Khong the ghi file khach hang.");
@@ -576,7 +644,12 @@ int loadCustomers(void) {
 }
 
 int saveOrders(void) {
-    FILE *fp = fopen(FILE_ORDERS, "w");
+    if (!validateOrders()) {
+        printError("Du lieu phieu sua khong hop le!");
+        return 0;
+    }
+	
+	FILE *fp = fopen(FILE_ORDERS, "w");
 
     if (!fp) {
         printError("Khong the ghi file phieu sua.");
@@ -654,8 +727,13 @@ int loadOrders(void) {
 }
 
 int saveServices(void) {
+
+    if (!validateServices()) {
+        printError("Du lieu dich vu khong hop le. Khong the luu!");
+        return 0;
+    }
+
     FILE *fp = fopen(FILE_SERVICES, "w");
-    // Mở file ở chế độ ghi text (xóa nội dung cũ, ghi mới)
 
     if (!fp) {
         printError("Khong the ghi file dich vu.");
@@ -663,27 +741,15 @@ int saveServices(void) {
     }
 
     for (int i = 0; i < serviceCount; i++) {
-        // Ghi từng service theo đúng format
 
         fprintf(fp, "Service ID  : %s\n", services[i].serviceId);
-        // In mã dịch vụ
-
         fprintf(fp, "Name        : %s\n", services[i].name);
-        // In tên dịch vụ
-
         fprintf(fp, "Unit Price  : %.2f\n", services[i].unitPrice);
-        // In giá, giữ 2 số sau dấu phẩy
-
         fprintf(fp, "Is Active   : %d\n", services[i].isActive);
-        // In trạng thái (1 = hoạt động, 0 = ngưng)
-
         fprintf(fp, "-----------------------------------\n");
-        // Dòng phân cách (QUAN TRỌNG: phải giống format load)
     }
 
     fclose(fp);
-    // Đóng file
-
     return 1;
 }
 
@@ -1554,9 +1620,25 @@ void listOrders(int statusFilter) {
             char moneyFormatted[30];
             formatDateTime(orders[i].createdDate, dateFormatted);
             formatMoney(orders[i].totalAmount, moneyFormatted);
-            printf("  %-4d %-10s %-15s %-20s %-15s %s\n",
-                   i + 1, orders[i].orderId, orders[i].customerPhone,
-                   dateFormatted, getStatusString(orders[i].status), moneyFormatted);
+            printf("  %-4d %-10s %-15s %-20s ",
+       		i + 1,
+       		orders[i].orderId,
+       		orders[i].customerPhone,
+       		dateFormatted);
+
+			// In status
+			printStatus(orders[i].status);
+
+			// Tính độ dài text KHÔNG có màu
+			int len = strlen(getStatusString(orders[i].status));
+
+			// padding cho đủ 15 ký tự
+			for (int k = 0; k < (15 - len); k++) {
+    		printf(" ");
+			}
+
+// In tổng tiền
+printf(" %s\n", moneyFormatted);
         }
     }
 }
