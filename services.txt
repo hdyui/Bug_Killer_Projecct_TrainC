@@ -148,3 +148,8 @@ Name        : Thay day curoa
 Unit Price  : 600000.00
 Is Active   : 1
 -----------------------------------
+Service ID  : SV000031
+Name        : asd
+Unit Price  : 12312132.00
+Is Active   : 1
+-----------------------------------
