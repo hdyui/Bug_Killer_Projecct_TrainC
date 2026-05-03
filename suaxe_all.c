@@ -12,7 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include <sys/stat.h>
+
 
 /* =========================================================
  * SECTION 1: HẰNG SỐ & ĐỊNH NGHĨA
@@ -39,8 +39,8 @@
 #define STATUS_DONE      2   /* Hoàn thành */
 
 /* --- Đường dẫn file --- */
-#define FILE_CUSTOMERS "none.txt"
-#define FILE_ORDERS    "chuaco.txt"
+#define FILE_CUSTOMERS "customers.txt"
+#define FILE_ORDERS    "orders.txt"
 #define FILE_SERVICES  "services.txt"
 
 /* --- Màu ANSI --- */
@@ -112,12 +112,14 @@ int        serviceCount = 0;
 /* utils */
 int    isValidPhone(const char *phone);
 int    isValidPlate(const char *plate);
+int	   isValidName(const char *name);
+int	   isValidType(const char *type);
 int    strCmpIgnoreCase(const char *a, const char *b);
 void   strTrim(char *str);
 void   readLine(char *buffer, int maxLen);
-void   generateCustomerId(int n, char *buffer);
+void   generateCustomerId();
 void   generateOrderId();
-void   generateServiceId(int n, char *buffer);
+void   generateServiceId();
 void   formatDateTime(time_t t, char *buffer);
 void   getTodayString(char *buffer);
 char * getStatusString(int status);
@@ -127,9 +129,11 @@ void   printSuccess(const char *msg);
 void   printError(const char *msg);
 void   printStatus(int status);
 void   formatMoney(double amount, char *buffer);
+int    validateServices(void);
+int    validateCustomers(void);
+int    validateOrders(void);
 
 /* fileio */
-void   ensureDataDir(void);
 int    saveCustomers(void);
 int    loadCustomers(void);
 int    saveOrders(void);
@@ -185,23 +189,43 @@ static void menuService(void);
  * ========================================================= */
 
 int isValidPhone(const char *phone) {
-     if ( phone != NULL && ( strlen(phone) <= 11 && strlen(phone) >= 9)){
+     if ( phone != NULL && strlen(phone) == 10 ){
      	for ( int i = 0;  i < strlen(phone); i++){
      		if ( !isdigit(phone[i])) return 0;
 		 }
 		 return 1;
 	 }
-    return 0; /* placeholder */
+    return 0; 
 }
 
 int isValidPlate(const char *plate) {
-    if ( plate != NULL && ( strlen(plate) >= 6 && strlen(plate) <= 11 )) {
-	    for (int i = 0; i < strlen(plate); i++) {
-	        if ( isdigit(plate[i]) || isalpha(plate[i]) || plate[i] == '-' || plate[i] == '.') {
-	            return 1;
-	        }
-	    }
-	}
+    if (plate == NULL) return 0;
+    /* 65AA-123.45 => độ dài = 10 */
+    if (strlen(plate) != 11) return 0;
+    if (!isdigit(plate[0])) return 0;
+    if (!isdigit(plate[1])) return 0;
+    if (!isalpha(plate[2])) return 0;
+    if (!isalpha(plate[3])) return 0;
+    if (plate[4] != '-')    return 0;
+    if (!isdigit(plate[5])) return 0;
+    if (!isdigit(plate[6])) return 0;
+    if (!isdigit(plate[7])) return 0;
+    if (plate[8] != '.')    return 0;
+    if (!isdigit(plate[9])) return 0;
+    return 1;
+}
+
+int isValidName(const char *name) {
+	if (name == NULL || *name == '\0')
+        return 0;
+
+    while (*name)
+    {
+        if (!isalpha(*name) && *name != ' ')
+            return 0;
+        name++;
+    }
+    return 1;
 }
 
 int strCmpIgnoreCase(const char *a, const char *b) {
@@ -296,26 +320,16 @@ void readLine(char *buffer, int maxLen) {
     strTrim(buffer);
 }
 
-void generateCustomerId(int n, char *buffer) {
-    sprintf(buffer, "CU%06d", n);
+void generateCustomerId() {
+    sprintf(customers[customerCount].customerId, "CU%06d", customerCount+1);
 }
 
 void generateOrderId() {
     sprintf(orders[orderCount].orderId,"RO%06d", orderCount + 1);
 }
 
-void generateServiceId(int n, char *buffer) {
-    /* TODO: snprintf(buffer, ID_LEN, "SV%06d", n); */
-    
-    // Hàm này để tạo ID dịch vụ theo format cố định
-	snprintf(buffer, ID_LEN, "SV%06d", n);
-	/*
-	- snprintf dùng để ghi chuỗi vào buffer với độ dài được define sẵn 
-	- buffer là nơi chứa kết quả 
-	- Phần trong ngoặc kép là format của chuỗi ID
-	- Còn n là số đếm để tạo ID
-	*/
-
+void generateServiceId() {
+    sprintf(services[serviceCount].serviceId, "SV%06d", serviceCount + 1);
 }
 
 void formatDateTime(time_t t, char *buffer) {
@@ -512,162 +526,298 @@ void formatMoney(double amount, char *buffer) {
     strcat(buffer, " VND"); // Dùng strcat để nối cụm " VND" vào sau số tiền từ buffer
 }
 
+int validateServices(void) {
+    for (int i = 0; i < serviceCount; i++) {
+
+        // ID không rỗng
+        if (strlen(services[i].serviceId) == 0)
+            return 0;
+
+        // Name không rỗng
+        if (strlen(services[i].name) == 0)
+            return 0;
+
+        // Giá phải > 0
+        if (services[i].unitPrice <= 0)
+            return 0;
+
+        // isActive phải là 0 hoặc 1
+        if (services[i].isActive != 0 && services[i].isActive != 1)
+            return 0;
+    }
+    return 1;
+}
+
+int validateCustomers(void) {
+    for (int i = 0; i < customerCount; i++) {
+
+        if (!isValidName(customers[i].fullName))
+            return 0;
+
+        if (!isValidPhone(customers[i].phoneNumber))
+            return 0;
+
+        if (!isValidPlate(customers[i].carPlate))
+            return 0;
+
+        if (!isValidName(customers[i].carType))
+            return 0;
+    }
+    return 1;
+}
+
+int validateOrders(void) {
+    for (int i = 0; i < orderCount; i++) {
+
+        if (strlen(orders[i].orderId) == 0)
+            return 0;
+
+        if (!isValidPhone(orders[i].customerPhone))
+            return 0;
+
+        if (orders[i].status < 0 || orders[i].status > 2)
+            return 0;
+
+        if (orders[i].itemCount < 0 || orders[i].itemCount > MAX_ITEMS_PER_ORDER)
+            return 0;
+
+        if (orders[i].totalAmount < 0)
+            return 0;
+    }
+    return 1;
+}
+
 /* =========================================================
  * SECTION 6: FILE I/O
  * ========================================================= */
 
 int saveCustomers(void) {
-    /* TODO:
-     * FILE *fp = fopen(FILE_CUSTOMERS, "wb");
-     * if (!fp) { printError("Khong the ghi file khach hang."); return 0; }
-     * fwrite(&customerCount, sizeof(int), 1, fp);
-     * fwrite(customers, sizeof(Customer), customerCount, fp);
-     * fclose(fp);
-     * return 1;
-     */
-    
-    FILE *fp = fopen(FILE_CUSTOMERS, "wb"); 
-    /*
-	Mở file ở chế độ ghi nhị phân (chọn ghi nhị phân là vì mình dùng fwrite và nhóm dùng fwrite vì nó tối ưu hơn về tốc độ, ít lỗi hơn khi làm việc 
-	với struct)
-    Nếu file chưa tồn tại thì sẽ tạo mới
-    Nếu đã tồn tại thì sẽ ghi đè
-	*/ 
+	if (!validateCustomers()) {
+        printError("Du lieu khach hang khong hop le!");
+        return 0;
+    }
+	
+	FILE *fp = fopen(FILE_CUSTOMERS, "w");
 
-    if (!fp) { 
-        printError("Khong the ghi file khach hang."); 
-        return 0; 
-        // Nếu mở file thất bại (vd: không có thư mục data) thù sẽ báo lỗi và return 0 (fail)
+    if (!fp) {
+        printError("Khong the ghi file khach hang.");
+        return 0;
     }
 
-    fwrite(&customerCount, sizeof(int), 1, fp); 
-    // Ghi số lượng khách hàng vào file trước để lúc load biết cần đọc bao nhiêu phần tử
+    fprintf(fp, "%d\n", customerCount);
 
-    fwrite(customers, sizeof(Customer), customerCount, fp); 
-    // Ghi toàn bộ mảng customers vào file
-    // mỗi phần tử có kích thước sizeof(Customer)
-    // tổng cộng customerCount phần tử
+    for (int i = 0; i < customerCount; i++) {
+        fprintf(fp, "%s|%s|%s|%s|%s|%d\n",
+            customers[i].customerId,
+            customers[i].fullName,
+            customers[i].phoneNumber,
+            customers[i].carPlate,
+            customers[i].carType,
+            customers[i].orderCount
+        );
+    }
 
-    fclose(fp); 
-    // Đóng file lại 
-
-    return 1; 
-    // Trả về 1 = lưu thành công
+    fclose(fp);
+    return 1;
 }
 
 int loadCustomers(void) {
-    /* TODO:
-     * FILE *fp = fopen(FILE_CUSTOMERS, "rb");
-     * if (!fp) return 0;  -- lần đầu chạy, bình thường
-     * fread(&customerCount, sizeof(int), 1, fp);
-     * fread(customers, sizeof(Customer), customerCount, fp);
-     * fclose(fp);
-     * return 1;
-     */
-    return 0; /* placeholder */
+    FILE *fp = fopen(FILE_CUSTOMERS, "r");
+    if (!fp) return 0;
+
+    fscanf(fp, "%d\n", &customerCount);
+
+    for (int i = 0; i < customerCount; i++) {
+        fscanf(fp, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%d\n",
+            customers[i].customerId,
+            customers[i].fullName,
+            customers[i].phoneNumber,
+            customers[i].carPlate,
+            customers[i].carType,
+            &customers[i].orderCount
+        );
+    }
+
+    fclose(fp);
+    return 1;
+
 }
 
 int saveOrders(void) {
-    /* TODO: Tương tự saveCustomers cho orders[] / FILE_ORDERS */
-    
-	FILE *fp = fopen(FILE_ORDERS, "wb"); 
-    // Mở file orders.dat ở chế độ ghi nhị phân (giải thích tương tự hàm saveCustomers)
-    // Nếu chưa có thì tạo mới, nếu có rồi thì ghi đè lên
+    if (!validateOrders()) {
+        printError("Du lieu phieu sua khong hop le!");
+        return 0;
+    }
+	
+	FILE *fp = fopen(FILE_ORDERS, "w");
 
     if (!fp) {
-        printError("Khong the ghi file phieu sua."); 
-        return 0; 
-        // Nếu mở file thất bại thì báo lỗi và return 0
+        printError("Khong the ghi file phieu sua.");
+        return 0;
     }
 
-    fwrite(&orderCount, sizeof(int), 1, fp); 
-    // Ghi số lượng phiếu sửa (orderCount) vào đầu file để lúc load biết cần đọc bao nhiêu phần tử
+    fprintf(fp, "%d\n", orderCount);
 
-    fwrite(orders, sizeof(RepairOrder), orderCount, fp); 
-    // Ghi toàn bộ mảng orders xuống file, mỗi phần tử có kích thước sizeof(RepairOrder)
+    for (int i = 0; i < orderCount; i++) {
+        RepairOrder *o = &orders[i];
 
-    fclose(fp); 
-    // Đóng file 
+        fprintf(fp, "%s|%s|%s|%d|%ld|%ld|%d|%.2f\n",
+            o->orderId,
+            o->customerPhone,
+            o->symptom,
+            o->status,
+            o->createdDate,
+            o->updatedDate,
+            o->itemCount,
+            o->totalAmount
+        );
 
-    return 1; 
-    // Lưu thành công
+        for (int j = 0; j < o->itemCount; j++) {
+            RepairItem *it = &o->items[j];
+
+            fprintf(fp, "%s|%s|%d|%.2f|%.2f\n",
+                it->serviceId,
+                it->serviceName,
+                it->quantity,
+                it->unitPrice,
+                it->subtotal
+            );
+        }
+    }
+
+    fclose(fp);
+    return 1;
 }
 
 int loadOrders(void) {
-    /* TODO: Tương tự loadCustomers cho orders[] / FILE_ORDERS */
-    return 0; /* placeholder */
+    FILE *fp = fopen(FILE_ORDERS, "r");
+    if (!fp) return 0;
+
+    fscanf(fp, "%d\n", &orderCount);
+
+    for (int i = 0; i < orderCount; i++) {
+        RepairOrder *o = &orders[i];
+
+        fscanf(fp, "%[^|]|%[^|]|%[^|]|%d|%ld|%ld|%d|%lf\n",
+            o->orderId,
+            o->customerPhone,
+            o->symptom,
+            &o->status,
+            &o->createdDate,
+            &o->updatedDate,
+            &o->itemCount,
+            &o->totalAmount
+        );
+
+        for (int j = 0; j < o->itemCount; j++) {
+            RepairItem *it = &o->items[j];
+
+            fscanf(fp, "%[^|]|%[^|]|%d|%lf|%lf\n",
+                it->serviceId,
+                it->serviceName,
+                &it->quantity,
+                &it->unitPrice,
+                &it->subtotal
+            );
+        }
+    }
+
+    fclose(fp);
+    return 1;
 }
 
 int saveServices(void) {
-    /* TODO: Tương tự saveCustomers cho services[] / FILE_SERVICES */
-    
-	FILE *fp = fopen(FILE_SERVICES, "wb"); 
-    // Mở file services.dat ở chế độ ghi nhị phân
 
-    if (!fp) {
-        printError("Khong the ghi file dich vu."); 
-        return 0; 
-        // Nếu mở file fail thì sẽ báo lỗi
+    if (!validateServices()) {
+        printError("Du lieu dich vu khong hop le. Khong the luu!");
+        return 0;
     }
 
-    fwrite(&serviceCount, sizeof(int), 1, fp); 
-    // Ghi số lượng dịch vụ
+    FILE *fp = fopen(FILE_SERVICES, "w");
 
-    fwrite(services, sizeof(Service), serviceCount, fp); 
-    // Ghi toàn bộ mảng services
+    if (!fp) {
+        printError("Khong the ghi file dich vu.");
+        return 0;
+    }
 
-    fclose(fp); 
-    // Đóng file
+    for (int i = 0; i < serviceCount; i++) {
 
-    return 1; 
-    // Thành công
+        fprintf(fp, "Service ID  : %s\n", services[i].serviceId);
+        fprintf(fp, "Name        : %s\n", services[i].name);
+        fprintf(fp, "Unit Price  : %.2f\n", services[i].unitPrice);
+        fprintf(fp, "Is Active   : %d\n", services[i].isActive);
+        fprintf(fp, "-----------------------------------\n");
+    }
+
+    fclose(fp);
+    return 1;
 }
 
 int loadServices(void) {
-    /* TODO: Tương tự loadCustomers cho services[] / FILE_SERVICES */
-    return 0; /* placeholder */
+    FILE *fp = fopen(FILE_SERVICES, "r");
+    if (!fp) return 0;
+
+    char line[256];
+    serviceCount = 0;
+
+    while (fgets(line, sizeof(line), fp)) {
+
+        // Tìm dòng bắt đầu của 1 service
+        if (strncmp(line, "Service ID", 10) == 0) {
+
+            if (serviceCount >= MAX_SERVICES) break;
+
+            Service *s = &services[serviceCount];
+
+            // --- Service ID ---
+            sscanf(line, "Service ID  : %s", s->serviceId);
+
+            // --- Name ---
+            if (fgets(line, sizeof(line), fp)) {
+                sscanf(line, "Name        : %[^\n]", s->name);
+            }
+
+            // --- Unit Price ---
+            if (fgets(line, sizeof(line), fp)) {
+                sscanf(line, "Unit Price  : %lf", &s->unitPrice);
+            }
+
+            // --- Is Active ---
+            if (fgets(line, sizeof(line), fp)) {
+                sscanf(line, "Is Active   : %d", &s->isActive);
+            }
+
+            // --- Skip dòng gạch ---
+            fgets(line, sizeof(line), fp);
+
+            serviceCount++;
+        }
+    }
+
+    fclose(fp);
+    return 1;
 }
 
 void loadAllData(void) {
-    /* TODO: Gọi loadCustomers(), loadServices(), loadOrders() */
+    
+	loadCustomers();
+    loadServices();
+    loadOrders();
 }
 
+
 void saveAllData(void) {
-    /* TODO: Gọi saveCustomers(), saveServices(), saveOrders() */
     
 	saveCustomers(); 
-    // Lưu khách hàng
-
     saveServices();  
-    // Lưu dịch vụ
-
     saveOrders();    
-    // Lưu phiếu sửa
 }
 
 /* =========================================================
  * SECTION 7: CUSTOMER
  * ========================================================= */
 
-// ko cần lắm
-void initCustomers(void) {
-    /* TODO: customerCount = 0; memset(customers, 0, sizeof(customers)); */
-}
-
 int addCustomer(void) {
-	/* TODO:
-     * 1. Kiểm tra customerCount < MAX_CUSTOMERS
-     * 2. Customer *c = &customers[customerCount];
-     * 3. Nhập và validate fullName (không rỗng)
-     * 4. Nhập phoneNumber, gọi isValidPhone(); kiểm tra trùng findCustomerByPhone()
-     * 5. Nhập carPlate, gọi isValidPlate()
-     * 6. Nhập carType (không rỗng)
-     * 7. generateCustomerId(customerCount + 1, c->customerId)
-     * 8. c->orderCount = 0; customerCount++;
-     * 9. saveCustomers(); printSuccess("Da them khach hang.");
-     * 10. return 1;
-     */
-     
     /* Biến tạm để nhập trước, sau khi hợp lệ mới gán vào mảng */
     char tempName[NAME_LEN];
     char tempPhone[PHONE_LEN];
@@ -686,10 +836,10 @@ int addCustomer(void) {
         printf("  Ho va ten: ");
         scanf(" %99[^\n]", tempName);   
         while (getchar() != '\n');      
-        if (tempName[0] == '\0') {
-            printError("Ho ten khong duoc de trong.");
+        if ( !isValidName(tempName) ) {
+            printError("Ho ten khong hop le.");
         }
-    } while (tempName[0] == '\0');
+    } while ( !isValidName(tempName) );
  
     /* --- Nhập số điện thoại --- */
     while (1) {
@@ -697,7 +847,7 @@ int addCustomer(void) {
         scanf(" %10s", tempPhone);      
         while (getchar() != '\n');
         if (isValidPhone(tempPhone) == 0) {
-            printError("SDT khong hop le (chi chua so, 9-11 ky tu).");
+            printError("SDT khong hop le (chi chua so, 10 ky tu).");
             continue;
         }
         foundIdx = findCustomerByPhone(tempPhone);
@@ -723,19 +873,18 @@ int addCustomer(void) {
         printf("  Loai xe (VD: Xe may, O to, Xe dap dien): ");
         scanf(" %29[^\n]", tempType);
         while (getchar() != '\n');
-        if (tempType[0] == '\0') {
-            printError("Loai xe khong duoc de trong.");
+        if (!isValidName(tempType)) {
+            printError("Loai xe khong hop le.");
         }
-    } while (tempType[0] == '\0');
+    } while (!isValidName(tempType));
     /* --- Ghi dữ liệu vào ô mảng tại vị trí customerCount --- */
     strcpy(customers[customerCount].fullName,    tempName);
     strcpy(customers[customerCount].phoneNumber, tempPhone);
     strcpy(customers[customerCount].carPlate,    tempPlate);
     strcpy(customers[customerCount].carType,     tempType);
     customers[customerCount].orderCount = 0;
-    generateCustomerId(customerCount + 1, customers[customerCount].customerId);
+    generateCustomerId();
     customerCount++;
-    printf("CSC %d", customerCount);
     saveCustomers();
     printSuccess("Da them khach hang thanh cong!");
     printf("  Ma KH duoc cap: %s\n", customers[customerCount - 1].customerId);
@@ -743,22 +892,20 @@ int addCustomer(void) {
 }
 
 int editCustomer(void) {
-    /* TODO:
-     * 1. Nhập SĐT cần sửa
-     * 2. int idx = findCustomerByPhone(phone); if (idx == -1) { lỗi; return 0; }
-     * 3. printCustomer(&customers[idx]);
-     * 4. Menu: [1] Sửa tên  [2] Sửa biển số  [3] Sửa loại xe  [0] Huỷ
-     * 5. Nhập và validate giá trị mới, gán vào customers[idx]
-     * 6. saveCustomers(); printSuccess(); return 1;
-     */
+	
     char phone[PHONE_LEN];
     int  idx;
     int  choice;
  
     /* Bước 1: nhập SĐT cần sửa */
-    printf("  Nhap SDT khach hang can sua: ");
-    scanf(" %14s", phone);
-    while (getchar() != '\n');
+    do {
+    	printf("  Nhap SDT khach hang can sua: ");
+    	scanf(" %14s", phone);
+    	if( !isValidPhone(phone) ){
+    		printError("  SDT khong hop le, xin hay nhap lai!");
+		}
+	}
+    while (!isValidPhone(phone));
  
     /* Bước 2: tìm khách theo SĐT */
     idx = findCustomerByPhone(phone);
@@ -781,16 +928,14 @@ int editCustomer(void) {
  
     /* Bước 5: nhập giá trị mới, validate rồi gán vào customers[idx] */
     if (choice == 1) {
- 
-        /* Sửa họ tên - không được rỗng */
         do {
             printf("  Ho ten moi: ");
             scanf(" %99[^\n]", customers[idx].fullName);
             while (getchar() != '\n');
-            if (customers[idx].fullName[0] == '\0') {
-                printError("Ho ten khong duoc de trong.");
+            if (!isValidName(customers[idx].fullName)) {
+                printError("Ho ten khong hop le.");
             }
-        } while (customers[idx].fullName[0] == '\0');
+        } while (!isValidName(customers[idx].fullName));
  
     } else if (choice == 2) {
  
@@ -815,10 +960,10 @@ int editCustomer(void) {
             printf("  Loai xe moi: ");
             scanf(" %29[^\n]", customers[idx].carType);
             while (getchar() != '\n');
-            if (customers[idx].carType[0] == '\0') {
-                printError("Loai xe khong duoc de trong.");
+            if (!isValidName(customers[idx].carType) ) {
+                printError("Loai xe khong hop le.");
             }
-        } while (customers[idx].carType[0] == '\0');
+        } while (!isValidName(customers[idx].carType));
  
     } else if (choice == 0) {
         puts("  Da huy thao tac.");
@@ -858,7 +1003,7 @@ int findCustomerByPlate(const char *plate) {
             return i;
         }
     }
-    return -1; /* placeholder */
+    return -1; 
 }
 
 void searchCustomerMenu(void) {
@@ -873,6 +1018,7 @@ void searchCustomerMenu(void) {
     /* Hiển thị lựa chọn tìm kiếm */
     printf("  [1] Tim theo SDT\n");
     printf("  [2] Tim theo bien so xe\n");
+    printf("  [0] Quay lai\n");
     printf("  Lua chon: ");
     scanf(" %d", &choice);
     while (getchar() != '\n');
@@ -880,21 +1026,31 @@ void searchCustomerMenu(void) {
     idx = -1;
  
     if (choice == 1) {
-        char phone[PHONE_LEN];
-        printf("  Nhap SDT: ");
-        scanf(" %14s", phone);
-        while (getchar() != '\n');
-        idx = findCustomerByPhone(phone);
+    	char phone[PHONE_LEN];
+        do {
+        	printf("  Nhap SDT: ");
+        	scanf(" %11s", phone);
+        	if (!isValidPhone(phone)) {
+                printError("SDT khong hop le.");
+            }
+		}
+        while(!isValidPhone(phone));
+		idx = findCustomerByPhone(phone);
  
     } else if (choice == 2) {
-        char plate[PLATE_LEN];
-        printf("  Nhap bien so xe: ");
-        scanf(" %14s", plate);
-        while (getchar() != '\n');
+    	char plate[PLATE_LEN];
+        do {
+			printf("  Nhap bien so xe: ");
+        	scanf(" %11s", plate);
+        	if (!isValidPlate(plate)) {
+                printError("Bien so khong hop le.");
+            }
+    	}
+        while(!isValidPlate(plate));
         idx = findCustomerByPlate(plate);
  
     } else {
-        printError("Lua chon khong hop le.");
+        //printError("Lua chon khong hop le.");
         return;
     }
  
@@ -923,11 +1079,7 @@ void printCustomer(const Customer *c) {
 }
 
 void listAllCustomers(void) {
-    /* TODO:
-     * if (customerCount == 0) { puts("Chua co khach hang."); return; }
-     * In header bảng: STT | Mã KH | Họ tên | SĐT | Biển số | Loại xe | Phiếu
-     * Duyệt vòng for in từng dòng
-     */
+	////////// Mỗi Khách hàng có một sdt và biển số xe duy nhất ( cần cải tiến ) 
     /* Kiểm tra danh sách rỗng */
     if (customerCount == 0) {
         puts("  Chua co khach hang nao trong he thong.");
@@ -959,7 +1111,8 @@ void listAllCustomers(void) {
  * ========================================================= */
 
 void initServices(void) {
-    /* TODO: serviceCount = 0; memset(services, 0, sizeof(services)); */
+    serviceCount = 0;
+    memset(services, 0, sizeof(services));
 }
 
 int addService(void) {
@@ -1017,7 +1170,7 @@ int addService(void) {
     printSuccess("Da them dich vu thanh cong!");
     printf("  Ma DV duoc cap: %s\n", services[serviceCount - 1].serviceId);
         
-    return 1; /* placeholder */
+    return 1; 
 }
 
 int editService(void) {
@@ -1033,11 +1186,9 @@ int editService(void) {
     listAllServices();
     if (serviceCount == 0) return 0; /* Không có dịch vụ để sửa */
 
-
     char id[ID_LEN];
     printf("  Nhap ma dich vu can sua (VD: SV000001): ");
     readLine(id, ID_LEN);
-
 
     int idx = findServiceById(id);
     if (idx == -1) {
@@ -1050,6 +1201,7 @@ int editService(void) {
     printf("  Dich vu dang chon: %s - %s\n", services[idx].serviceId, services[idx].name);
     printf("  [1] Sua ten dich vu\n");
     printf("  [2] Sua don gia\n");
+    printf("  [3] Kich hoat/Tam ngung dich vu\n");
     printf("  [0] Huy\n");
     printf("  Lua chon: ");
     scanf("%d", &choice);
@@ -1084,7 +1236,12 @@ int editService(void) {
         } while (newPrice <= 0);
         services[idx].unitPrice = newPrice;
 
-    } else if (choice == 0) {
+    } 
+    else if (choice == 3) {
+        services[idx].isActive = !services[idx].isActive;
+        printf("  Dich vu da duoc %s.\n", services[idx].isActive ? "kich hoat" : "tam ngung");
+    }
+    else if (choice == 0) {
         printf("  Da huy thao tac.\n");
         return 0;
     } else {
@@ -1102,7 +1259,7 @@ int editService(void) {
 int findServiceById(const char *serviceId) {
     int index = -1;
     for(int i = 0; i < serviceCount; i++){
-        if(strcmp(services[i].serviceId, serviceId) == 0 && services[i].isActive == 1){
+        if(strcmp(services[i].serviceId, serviceId) == 0){
             index = i;
             break;
         }
@@ -1115,34 +1272,35 @@ void listAllServices(void) {
      * In header: STT | Mã DV | Tên dịch vụ | Đơn giá
      * Duyệt for, chỉ in isActive == 1; dùng formatMoney cho đơn giá
      */
-    /* Đếm xem có bao nhiêu dịch vụ đang Active */
     int activeCount = 0;
     for (int i = 0; i < serviceCount; i++) {
-        if (services[i].isActive == 1) activeCount++;
+        if (services[i].isActive == 1) {
+            activeCount++;
+        }
     }
 
-    if (activeCount == 0) {
-        printf("  Chua co dich vu nao hoat dong trong he thong.\n");
+
+    if (serviceCount == 0) {
+        printError("Chua co dich vu nao trong he thong!");
         return;
     }
 
     /* In Header */
     printDivider();
-    printf("  %-4s %-10s %-30s %-20s\n", "STT", "Ma DV", "Ten dich vu", "Don gia");
+    printf("  %-4s %-10s %-30s %-20s %-20s\n", "STT", "Ma DV", "Ten dich vu", "Don gia", "Trang thai");
     printDivider();
 
 
     int stt = 1;
     for (int i = 0; i < serviceCount; i++) {
-        if (services[i].isActive == 1) {
-            char priceBuf[30];
-            formatMoney(services[i].unitPrice, priceBuf); 
-            printf("  %-4d %-10s %-30s %-20s\n",
-                   stt++,
-                   services[i].serviceId,
-                   services[i].name,
-                   priceBuf);
-        }
+        char priceBuf[30];
+        formatMoney(services[i].unitPrice, priceBuf); 
+        printf("  %-4d %-10s %-30s %-20s %-20s\n",
+                stt++,
+                services[i].serviceId,
+                services[i].name,
+                priceBuf,
+                services[i].isActive ? "Hoat dong" : "Khong hoat dong");
     }
     printDivider();
     printf("  Tong so dich vu dang hoat dong: %d\n", activeCount);
@@ -1152,27 +1310,7 @@ void listAllServices(void) {
  * SECTION 9: REPAIR ORDER
  * ========================================================= */
 
-void initOrders(void) {
-    /* TODO: orderCount = 0; memset(orders, 0, sizeof(orders)); */
-}
 int createRepairOrder(void) {
-    /* TODO:
-     * 1. Kiểm tra orderCount < MAX_REPAIR_ORDERS
-     * 2. Nhập SĐT, findCustomerByPhone() -> nếu -1 báo lỗi return 0
-     * 3. printCustomer để xác nhận
-     * 4. Nhập symptom (không rỗng)
-     * 5. Khởi tạo RepairOrder mới:
-     *    generateOrderId(orderCount+1, o->orderId)
-     *    strcpy(o->customerPhone, phone)
-     *    o->status = STATUS_RECEIVED
-     *    o->createdDate = time(NULL)
-     *    o->itemCount = 0; o->totalAmount = 0
-     * 6. Vòng lặp thêm dịch vụ:
-     *    listAllServices(); hỏi "[1] Them  [0] Xong"
-     *    nếu 1 -> addItemToOrder(orderCount)
-     * 7. orderCount++; customers[cIdx].orderCount++;
-     * 8. saveOrders(); saveCustomers(); printSuccess(); return 1
-     */
     int status = 1;
     int index; //vị trí khách hàng trong mảng 
     char phoneNumber[PHONE_LEN];
@@ -1216,6 +1354,7 @@ int createRepairOrder(void) {
     do{
         printf("Nhap tinh trang xe cua ban: ");
         scanf("%[^\n]", symptom);
+        while (getchar() != '\n');
     }
     while(strlen(symptom) == 0);
     strcpy(orders[orderCount].symptom, symptom);
@@ -1224,34 +1363,33 @@ int createRepairOrder(void) {
     orders[orderCount].itemCount = 0;
     orders[orderCount].totalAmount = 0;
 
-    printf("%-20s %-20s %-20s %-20s\n",
-        "ID", "Name", "Unit price", "Active");
-    for(int i = 0; i < serviceCount; i++){
-        int choice;
-        if(services[i].isActive == 1){
-            do{
-                printf("%-20s %-20s %-20s %-20s\n",
-                services[i].serviceId, services[i].name, 
-                services[i].unitPrice, services[i].isActive);
 
-                printf("[1] Su dung dich vu nay\n");
-                printf("[0] Bo qua dich vu nay\n");
-                printf("Nhap lua chon: ");
-                scanf("%d", &choice);
-            }
-            while(choice != 0 && choice != 1);
-            if(choice == 1){
-                addItemToOrder(orderCount, i);
-                
-            }
+    listAllServices();
+    char serviceId[ID_LEN];
+    do{
+        printf("Nhap ma dich vu can them vao phieu (VD: SV000001), nhap 0 de ket thuc: ");
+        scanf("%[^\n]", serviceId);
+        while (getchar() != '\n');
+        if(strcmp(serviceId, "0") == 0){
+            break;
         }
+        int serviceIdx = findServiceById(serviceId);
+        if(serviceIdx == -1 || services[serviceIdx].isActive == 0){
+            printf("Khong tim thay dich vu hoac dich vu khong hoat dong.\n");
+            continue;
+        }
+        addItemToOrder(orderCount, serviceIdx);
+        
     }
+    while(1);
+        
     orderCount++;
     customers[index].orderCount++;
 
 
     
-
+    saveOrders();
+    saveCustomers();
     printf("Tao phieu thanh cong\n");
     return status;
 }
@@ -1370,13 +1508,21 @@ int updateOrderStatus(void) {
 
 
 int findOrderById(const char *orderId) {
-   
-	for (int i = 0; i < orderCount; i++) {
-        if (strcmp(orders[i].orderId, orderId) == 0) {
-            return i;
+    int left = 0, right = orderCount - 1;
+    while(left <= right){
+        int mid = left + (right - left) / 2;
+        if(strcmp(orderId, orders[mid].orderId) < 0){
+            right = mid - 1;
+        }
+        else if(strcmp(orderId, orders[mid].orderId) > 0){
+            left = mid + 1;
+        }
+        else{
+            return mid;
         }
     }
-    return -1; /* placeholder */
+    return -1;
+
 }
 
 int findOrdersByPhone(const char *phone, int *result, int maxResult) {
@@ -1405,23 +1551,6 @@ int findOrdersByPlate(const char *plate, int *result, int maxResult) {
 }
 
 void printOrder(const RepairOrder *o) {
-    /* TODO:
-     * printDivider();
-     * printf("  Ma phieu   : %s\n", o->orderId);
-     * printf("  SDT KH     : %s\n", o->customerPhone);
-     * printf("  Trieu chung: %s\n", o->symptom);
-     * char dtBuf[20]; formatDateTime(o->createdDate, dtBuf);
-     * printf("  Ngay tao   : %s\n", dtBuf);
-     * printf("  Trang thai : "); printStatus(o->status); puts("");
-     * printDivider();
-     * --- In bảng dịch vụ ---
-     * for (int i = 0; i < o->itemCount; i++) { ... }
-     * --- Tổng tiền ---
-     * char monBuf[30]; formatMoney(o->totalAmount, monBuf);
-     * printf("  TONG TIEN  : %s\n", monBuf);
-     * printDivider();
-     */
-     
     printDivider();
 
     printf("  CHI TIET PHIEU SUA CHUA\n");
@@ -1491,9 +1620,25 @@ void listOrders(int statusFilter) {
             char moneyFormatted[30];
             formatDateTime(orders[i].createdDate, dateFormatted);
             formatMoney(orders[i].totalAmount, moneyFormatted);
-            printf("  %-4d %-10s %-15s %-20s %-15s %s\n",
-                   i + 1, orders[i].orderId, orders[i].customerPhone,
-                   dateFormatted, getStatusString(orders[i].status), moneyFormatted);
+            printf("  %-4d %-10s %-15s %-20s ",
+       		i + 1,
+       		orders[i].orderId,
+       		orders[i].customerPhone,
+       		dateFormatted);
+
+			// In status
+			printStatus(orders[i].status);
+
+			// Tính độ dài text KHÔNG có màu
+			int len = strlen(getStatusString(orders[i].status));
+
+			// padding cho đủ 15 ký tự
+			for (int k = 0; k < (15 - len); k++) {
+    		printf(" ");
+			}
+
+// In tổng tiền
+printf(" %s\n", moneyFormatted);
         }
     }
 }
@@ -1727,7 +1872,7 @@ static void menuService(void) {
         switch (choice) {
             case 1: addService();      break;
             case 2: editService();     break;
-            case 3: listAllServices(); break;
+            case 3: loadServices(); listAllServices(); break;
             case 0: break;
             default: printError("Lua chon khong hop le.");
         }
@@ -1741,10 +1886,6 @@ static void menuService(void) {
 int main(void) {
     int choice;
 
-    initCustomers();
-    initServices();
-
-    ensureDataDir();
     loadAllData();
 
     do {
