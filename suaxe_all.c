@@ -674,10 +674,10 @@ int loadCustomers(void) {
 
     fscanf(fp, "%d\n", &customerCount);
     // sau khi load xong, có số lượng phần tử data mình phải duyệt check xem đã chuẩn hóa chưa rồi mới lưu
-    if (!validateCustomers()) {
-        printError("Du lieu khach hang co loi");
-        return 0;
-    }
+//    if (!validateCustomers()) {
+//        printError("Du lieu khach hang co loi");
+//        return 0;
+//    }
     for (int i = 0; i < customerCount; i++) {
         fscanf(fp, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%d\n",
             customers[i].customerId,
@@ -1711,7 +1711,7 @@ void viewCustomerHistory(void) {
 }
 
 void searchOrderMenu(void) {
-    
+    // thêm option quay lai cho khách hàng
     int choice;
     do{
         printf("Lua chon tim kiem:\n");
@@ -1761,13 +1761,7 @@ void searchOrderMenu(void) {
  * ========================================================= */
 
 void reportDailyRevenue(void) {
-    /* TODO:
-     * 1. Lấy ngày hôm nay qua localtime(time(NULL))
-     * 2. Duyệt orders[], chỉ xét STATUS_DONE và createdDate trùng ngày hôm nay
-     * 3. Cộng totalAmount, đếm số phiếu
-     * 4. In kết quả
-     */
-     
+	// hàm này có cần so sánh ngày không ?
     time_t now = time(NULL);
     struct tm *today = localtime(&now);
 
@@ -1847,15 +1841,53 @@ int createInvoice(const char * orderId){
     return 1;
 }
 int exportInvoice(const char *orderId) {
-    /* TODO:
-     * 1. findOrderById(orderId) -> nếu -1 báo lỗi return 0
-     * 2. Tạo tên file "invoice_XXXXXXX.txt"
-     * 3. fopen(filename, "w")
-     * 4. Ghi thông tin hóa đơn đầy đủ vào file
-     * 5. fclose; printSuccess("Da xuat hoa don: filename"); return 1
-     */
-
-    return 0;
+    int orderIndex = findOrderById(orderId);
+    if (orderIndex == -1) {
+        printf("Loi: Khong tim thay don hang mang ma %s!\n", orderId);
+        return 0;
+    }
+    RepairOrder *o = &orders[orderIndex];
+    
+    char filename[100];
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    char datetime[64];
+    strftime(datetime, sizeof(datetime), "%d/%m/%Y %H:%M:%S", t);
+    
+    sprintf(filename, "invoice_%s.txt", orderId);
+    FILE *fp = fopen(filename, "w");
+    if (fp == NULL) {
+        printf("Loi: Khong the tao file %s de ghi hoa don!\n", filename);
+        return 0;
+    }
+    fprintf(fp, "========================================================\n");
+    fprintf(fp, "                    HOA DON DICH VU                     \n");
+    fprintf(fp, "Ngay xuat     : %s\n", datetime);  
+    fprintf(fp, "========================================================\n");
+    fprintf(fp, "Ma don hang   : %s\n", o->orderId);
+    fprintf(fp, "So dien thoai : %s\n", o->customerPhone);
+    fprintf(fp, "Yeu cau/Loi   : %s\n", o->symptom);
+    fprintf(fp, "--------------------------------------------------------\n");
+    
+    // Header bảng dịch vụ
+    fprintf(fp, "%-4s | %-25s | %-4s | %-12s\n", "STT", "Ten dich vu", "SL", "Thanh tien");
+    fprintf(fp, "--------------------------------------------------------\n");
+    for (int i = 0; i < o->itemCount; i++) {
+        RepairItem *it = &o->items[i];
+        fprintf(fp, "%-4d | %-25s | %-4d | %-12.0lf\n", 
+                i + 1, 
+                it->serviceName, 
+                it->quantity, 
+                it->subtotal);
+    }
+    fprintf(fp, "--------------------------------------------------------\n");
+    fprintf(fp, "TONG CONG: %.0lf VND\n", o->totalAmount); 
+    fprintf(fp, "========================================================\n");
+    fprintf(fp, "             XIN CAM ON VA HEN GAP LAI!                 \n");
+    fclose(fp);
+    printSuccess("Da xuat hoa don"); 
+    
+    return 1;
 }
 
 void reportMenu(void) {
@@ -2004,7 +2036,6 @@ static void menuService(void) {
 int main(void) {
     int choice;
     loadAllData();
-
     do {
         printHeader("QUAN LY TIEM SUA XE - NHOM BUG KILLER");
         printf("  [1] Quan ly khach hang\n");
