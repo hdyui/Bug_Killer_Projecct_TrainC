@@ -549,42 +549,74 @@ int validateServices(void) {
 }
 
 int validateCustomers(void) {
+    int valid = 1;
+
     for (int i = 0; i < customerCount; i++) {
 
-        if (!isValidName(customers[i].fullName))
-            return 0;
+        if (!isValidName(customers[i].fullName)) {
+            printError("Ten khach hang khong hop le!");
+            valid = 0;
+        }
 
-        if (!isValidPhone(customers[i].phoneNumber))
-            return 0;
+        if (!isValidPhone(customers[i].phoneNumber)) {
+            printError("So dien thoai khong hop le!");
+            valid = 0;
+        }
 
-        if (!isValidPlate(customers[i].carPlate))
-            return 0;
+        if (!isValidPlate(customers[i].carPlate)) {
+            printError("Bien so khong hop le!");
+            valid = 0;
+        }
 
-        if (!isValidName(customers[i].carType))
-            return 0;
+        if (!isValidName(customers[i].carType)) {
+            printError("Loai xe khong hop le!");
+            valid = 0;
+        }
     }
-    return 1;
+
+    return valid;
 }
 
 int validateOrders(void) {
+    int valid = 1;
+
     for (int i = 0; i < orderCount; i++) {
 
-        if (strlen(orders[i].orderId) == 0)
-            return 0;
+        if (strlen(orders[i].orderId) == 0) {
+            printError("Order ID rong!");
+            valid = 0;
+        }
 
-        if (!isValidPhone(orders[i].customerPhone))
-            return 0;
+        if (!isValidPhone(orders[i].customerPhone)) {
+            printError("SDT trong order khong hop le!");
+            valid = 0;
+        }
 
-        if (orders[i].status < 0 || orders[i].status > 2)
-            return 0;
+        if (orders[i].status < 0 || orders[i].status > 2) {
+            printError("Trang thai order khong hop le!");
+            valid = 0;
+        }
 
-        if (orders[i].itemCount < 0 || orders[i].itemCount > MAX_ITEMS_PER_ORDER)
-            return 0;
+        if (orders[i].itemCount < 0 || orders[i].itemCount > MAX_ITEMS_PER_ORDER) {
+            printError("So luong item khong hop le!");
+            valid = 0;
+        }
 
-        if (orders[i].totalAmount < 0)
-            return 0;
+        if (orders[i].totalAmount < 0) {
+            printError("Tong tien khong hop le!");
+            valid = 0;
+        }
+
+        // check từng item
+        for (int j = 0; j < orders[i].itemCount; j++) {
+            if (strlen(orders[i].items[j].serviceId) == 0) {
+                printError("Service ID trong item rong!");
+                valid = 0;
+            }
+        }
     }
-    return 1;
+
+    return valid;
 }
 
 /* =========================================================
@@ -592,12 +624,12 @@ int validateOrders(void) {
  * ========================================================= */
 
 int saveCustomers(void) {
-	if (!validateCustomers()) {
-        printError("Du lieu khach hang khong hop le!");
-        return 0;
+
+    if (!validateCustomers()) {
+        printError("Du lieu khach hang co loi, van luu!");
     }
-	
-	FILE *fp = fopen(FILE_CUSTOMERS, "w");
+
+    FILE *fp = fopen(FILE_CUSTOMERS, "w");
 
     if (!fp) {
         printError("Khong the ghi file khach hang.");
@@ -644,12 +676,12 @@ int loadCustomers(void) {
 }
 
 int saveOrders(void) {
+
     if (!validateOrders()) {
-        printError("Du lieu phieu sua khong hop le!");
-        return 0;
+        printError("Du lieu phieu sua co loi, van luu!");
     }
-	
-	FILE *fp = fopen(FILE_ORDERS, "w");
+
+    FILE *fp = fopen(FILE_ORDERS, "w");
 
     if (!fp) {
         printError("Khong the ghi file phieu sua.");
@@ -1718,6 +1750,44 @@ void reportDailyRevenue(void) {
      * 3. Cộng totalAmount, đếm số phiếu
      * 4. In kết quả
      */
+     
+    time_t now = time(NULL);
+    struct tm *today = localtime(&now);
+
+    int day   = today->tm_mday;
+    int month = today->tm_mon;
+    int year  = today->tm_year;
+
+    double totalRevenue = 0;
+    int totalOrders = 0;
+
+    for (int i = 0; i < orderCount; i++) {
+        RepairOrder *o = &orders[i];
+
+        // chỉ xét phiếu đã hoàn thành
+        if (o->status != STATUS_DONE) continue;
+
+        struct tm *orderDate = localtime(&o->createdDate);
+
+        // so sánh ngày / tháng / năm
+        if (orderDate->tm_mday == day &&
+            orderDate->tm_mon  == month &&
+            orderDate->tm_year == year) {
+
+            totalRevenue += o->totalAmount;
+            totalOrders++;
+        }
+    }
+
+    printHeader("DOANH THU TRONG NGAY");
+
+    char moneyBuf[30];
+    formatMoney(totalRevenue, moneyBuf);
+
+    printf("  So phieu hoan thanh: %d\n", totalOrders);
+    printf("  Tong doanh thu     : %s\n", moneyBuf);
+
+    printDivider();
 }
 
 void reportTopServices(void) {
