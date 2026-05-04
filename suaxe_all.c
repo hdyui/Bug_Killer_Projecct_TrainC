@@ -1430,7 +1430,6 @@ int createRepairOrder(void) {
     }
     while(1);
     createInvoice(orders[orderCount].orderId);
-    printf("%s", orders[orderCount].orderId);
     orderCount++;
     customers[index].orderCount++;
 
@@ -1817,7 +1816,7 @@ void reportTopServices(void) {
 int createInvoice(const char * orderId){
     int orderIdx = findOrderById(orderId);
     if(orderIdx == -1){
-        printError("Khong tim thay phieu!dvvsdfvdsfvsdvsdfvsdfv");
+        printError("Khong tim thay phieu!");
         return 0;
     }
     int customerIdx = findCustomerByPhone(orders[orderIdx].customerPhone);
