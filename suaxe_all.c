@@ -1429,9 +1429,9 @@ int createRepairOrder(void) {
         
     }
     while(1);
-    createInvoice(orders[orderCount].orderId);
     orderCount++;
     customers[index].orderCount++;
+    createInvoice(orders[orderCount-1].orderId);
 
 
     
@@ -1831,6 +1831,7 @@ int createInvoice(const char * orderId){
     strcpy(invoices[invoiceCount].symptom, orders[orderIdx].symptom);
     strcpy(invoices[invoiceCount].carPlate, customers[customerIdx].carPlate);
     for(int i = 0; i < orders[orderIdx].itemCount; i++){
+        strcpy(invoices[invoiceCount].items[i].serviceId, orders[orderIdx].items[i].serviceId);
         strcpy(invoices[invoiceCount].items[i].serviceName, orders[orderIdx].items[i].serviceName);
         invoices[invoiceCount].items[i].quantity = orders[orderIdx].items[i].quantity;
         invoices[invoiceCount].items[i].unitPrice = orders[orderIdx].items[i].unitPrice;
