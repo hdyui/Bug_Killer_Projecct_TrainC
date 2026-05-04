@@ -1727,17 +1727,137 @@ void reportTopServices(void) {
      * 3. Sắp xếp giảm dần
      * 4. In top 5
      */
+
+        
+        // 1. Tạo mảng lưu danh sách dịch vụ và mảng đếm song song
+        Service localServices[MAX_SERVICES]; // Mảng chứa các dịch vụ duy nhất
+        int quantities[MAX_SERVICES] = {0};  // Mảng đếm số lượng tương ứng với từng dịch vụ
+        int uniqueCount = 0;        // Số lượng dịch vụ khác nhau tìm thấy
+
+        // 2. Duyệt tất cả orders[].items[], cộng quantity vào bộ đếm tương ứng
+        for (int i = 0; i < orderCount; i++) {
+            for (int j = 0; j < orders[i].itemCount; j++) {
+                RepairItem *item = &orders[i].items[j];
+                int found = 0;
+
+                // Kiểm tra dịch vụ đã có trong mảng localServices chưa
+                for (int k = 0; k < uniqueCount; k++) {
+                    if (strcmp(localServices[k].serviceId, item->serviceId) == 0) {
+                        quantities[k] += item->quantity; // Cộng dồn số lượng
+                        found = 1;
+                        break;
+                    }
+                }
+
+                // Nếu chưa có, thêm mới vào cả 2 mảng
+                if (!found) {
+                    strcpy(localServices[uniqueCount].serviceId, item->serviceId);
+                    strcpy(localServices[uniqueCount].name, item->serviceName);
+                    quantities[uniqueCount] = item->quantity;
+                    uniqueCount++;
+                }
+            }
+        }
+
+        // 3. Sắp xếp giảm dần (Bubble Sort trên cả 2 mảng song song)
+        for (int i = 0; i < uniqueCount - 1; i++) {
+            for (int j = i + 1; j < uniqueCount; j++) {
+                if (quantities[i] < quantities[j]) {
+                    // Hoán vị mảng số lượng
+                    int tempQty = quantities[i];
+                    quantities[i] = quantities[j];
+                    quantities[j] = tempQty;
+
+                    // Hoán vị mảng dịch vụ tương ứng
+                    Service tempSvc = localServices[i];
+                    localServices[i] = localServices[j];
+                    localServices[j] = tempSvc;
+                }
+            }
+        }
+
+        // 4. In top 5
+        printf("\n=================================================================\n");
+        printf("                TOP 5 DICH VU DUOC SU DUNG NHIEU NHAT            \n");
+        printf("=================================================================\n");
+        printf("%-12s | %-35s | %-10s\n", "Ma DV", "Ten dich vu", "Tong SL");
+        printf("-----------------------------------------------------------------\n");
+
+        int printCount = (uniqueCount < 5) ? uniqueCount : 5;
+        
+        if (printCount == 0) {
+            printf("Chua co du lieu dich vu!\n");
+        } else {
+            for (int i = 0; i < printCount; i++) {
+                // Sử dụng trường .name từ struct Service của bạn
+                printf("%-12s | %-35s | %d\n", 
+                    localServices[i].serviceId, 
+                    localServices[i].name, 
+                    quantities[i]);
+            }
+        }
+        printf("=================================================================\n\n");
+    
 }
 
 int exportInvoice(const char *orderId) {
-    /* TODO:
-     * 1. findOrderById(orderId) -> nếu -1 báo lỗi return 0
-     * 2. Tạo tên file "invoice_XXXXXXX.txt"
-     * 3. fopen(filename, "w")
-     * 4. Ghi thông tin hóa đơn đầy đủ vào file
-     * 5. fclose; printSuccess("Da xuat hoa don: filename"); return 1
-     */
-    return 0; /* placeholder */
+    /* 1. Tìm order. Nếu -1 báo lỗi return 0 */
+    int orderIndex = findOrderById(orderId);
+    if (orderIndex == -1) {
+        printf("Loi: Khong tim thay don hang mang ma %s!\n", orderId);
+        return 0;
+    }
+
+    // Lấy con trỏ trỏ đến đơn hàng để thao tác cho gọn
+    RepairOrder *o = &orders[orderIndex];
+
+    /* 2. Tạo tên file "invoice_XXXXXXX.txt" */
+    char filename[100];
+    sprintf(filename, "invoice_%s.txt", orderId);
+
+    /* 3. Mở file để ghi (mode "w") */
+    FILE *fp = fopen(filename, "w");
+    if (fp == NULL) {
+        printf("Loi: Khong the tao file %s de ghi hoa don!\n", filename);
+        return 0;
+    }
+
+    /* 4. Ghi thông tin hóa đơn đầy đủ vào file */
+    fprintf(fp, "========================================================\n");
+    fprintf(fp, "                    HOA DON DICH VU                     \n");
+    fprintf(fp, "========================================================\n");
+    fprintf(fp, "Ma don hang   : %s\n", o->orderId);
+    fprintf(fp, "So dien thoai : %s\n", o->customerPhone);
+    fprintf(fp, "Yeu cau/Loi   : %s\n", o->symptom);
+    fprintf(fp, "--------------------------------------------------------\n");
+    
+    // Header bảng dịch vụ
+    fprintf(fp, "%-4s | %-25s | %-4s | %-12s\n", "STT", "Ten dich vu", "SL", "Thanh tien");
+    fprintf(fp, "--------------------------------------------------------\n");
+
+    // Duyệt và in từng dịch vụ trong mảng items
+    for (int i = 0; i < o->itemCount; i++) {
+        RepairItem *it = &o->items[i];
+        fprintf(fp, "%-4d | %-25s | %-4d | %-12.0lf\n", 
+                i + 1, 
+                it->serviceName, 
+                it->quantity, 
+                it->subtotal);
+    }
+    
+    fprintf(fp, "--------------------------------------------------------\n");
+    // Dùng %.0lf để in tiền VNĐ không lấy số thập phân cho đẹp
+    fprintf(fp, "TONG CONG: %.0lf VND\n", o->totalAmount); 
+    fprintf(fp, "========================================================\n");
+    fprintf(fp, "             XIN CAM ON VA HEN GAP LAI!                 \n");
+
+    /* 5. Đóng file và báo thành công */
+    fclose(fp);
+    
+    // Nếu bạn có viết sẵn hàm printSuccess() thì có thể thay thế dòng printf này
+    printf("Da xuat hoa don: %s\n", filename); 
+    
+    return 1;
 }
 
 void reportMenu(void) {
