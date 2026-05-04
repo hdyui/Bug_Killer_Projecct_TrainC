@@ -91,7 +91,18 @@ typedef struct {
     int        itemCount;
     double     totalAmount;
 } RepairOrder;
-
+typedef struct{
+    char orderId[ID_LEN];
+    char customerName[NAME_LEN];
+    char customerPhone[PHONE_LEN];
+    char carPlate[PLATE_LEN];
+    char carType[CAR_TYPE_LEN];
+    char symptom[SYMPTOM_LEN];
+    time_t createdDate;
+    RepairItem items[MAX_ITEMS_PER_ORDER];
+    int itemCount;
+    double totalAmount;
+} Invoice;
 /* =========================================================
  * SECTION 3: BIẾN TOÀN CỤC
  * ========================================================= */
@@ -105,6 +116,8 @@ int         orderCount = 0;
 Service    services[MAX_SERVICES];
 int        serviceCount = 0;
 
+Invoice invoices[MAX_REPAIR_ORDERS];
+int invoiceCount = 0;
 /* =========================================================
  * SECTION 4: KHAI BÁO TRƯỚC (FORWARD DECLARATIONS)
  * ========================================================= */
@@ -178,6 +191,8 @@ void   reportDailyRevenue(void);
 void   reportTopServices(void);
 int    exportInvoice(const char *orderId);
 void   reportMenu(void);
+int createInvoice(const char * orderId);
+
 
 /* menus */
 static void menuCustomer(void);
@@ -1414,7 +1429,8 @@ int createRepairOrder(void) {
         
     }
     while(1);
-        
+    createInvoice(orders[orderCount].orderId);
+    printf("%s", orders[orderCount].orderId);
     orderCount++;
     customers[index].orderCount++;
 
@@ -1798,7 +1814,36 @@ void reportTopServices(void) {
      * 4. In top 5
      */
 }
-
+int createInvoice(const char * orderId){
+    int orderIdx = findOrderById(orderId);
+    if(orderIdx == -1){
+        printError("Khong tim thay phieu!dvvsdfvdsfvsdvsdfvsdfv");
+        return 0;
+    }
+    int customerIdx = findCustomerByPhone(orders[orderIdx].customerPhone);
+    if(customerIdx == -1){
+        printError("Khong tim thay khach hang!");
+        return 0;
+    }
+    strcpy(invoices[invoiceCount].orderId, orders[orderIdx].orderId);
+    strcpy(invoices[invoiceCount].customerName, customers[customerIdx].fullName);
+    strcpy(invoices[invoiceCount].customerPhone, customers[customerIdx].phoneNumber);
+    strcpy(invoices[invoiceCount].carType, customers[customerIdx].carType);
+    strcpy(invoices[invoiceCount].symptom, orders[orderIdx].symptom);
+    strcpy(invoices[invoiceCount].carPlate, customers[customerIdx].carPlate);
+    for(int i = 0; i < orders[orderIdx].itemCount; i++){
+        strcpy(invoices[invoiceCount].items[i].serviceName, orders[orderIdx].items[i].serviceName);
+        invoices[invoiceCount].items[i].quantity = orders[orderIdx].items[i].quantity;
+        invoices[invoiceCount].items[i].unitPrice = orders[orderIdx].items[i].unitPrice;
+        invoices[invoiceCount].items[i].subtotal = orders[orderIdx].items[i].subtotal;
+    }
+    invoices[invoiceCount].createdDate = time(NULL);
+    invoices[invoiceCount].itemCount = orders[orderIdx].itemCount;
+    invoices[invoiceCount].totalAmount = orders[orderIdx].totalAmount;
+    invoiceCount++;
+    printSuccess("Da tao hoa don trong he thong. Vui long chon [3] trong menu thong ke & hoa don de xuat hoa don ra file.");
+    return 1;
+}
 int exportInvoice(const char *orderId) {
     /* TODO:
      * 1. findOrderById(orderId) -> nếu -1 báo lỗi return 0
@@ -1807,7 +1852,8 @@ int exportInvoice(const char *orderId) {
      * 4. Ghi thông tin hóa đơn đầy đủ vào file
      * 5. fclose; printSuccess("Da xuat hoa don: filename"); return 1
      */
-    return 0; /* placeholder */
+
+    return 0;
 }
 
 void reportMenu(void) {
