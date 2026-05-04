@@ -569,22 +569,22 @@ int validateCustomers(void) {
     for (int i = 0; i < customerCount; i++) {
 
         if (!isValidName(customers[i].fullName)) {
-            printError("Ten khach hang khong hop le!");
+            printError("Ten khach hang khong hop le validateCustomers!");
             valid = 0;
         }
 
         if (!isValidPhone(customers[i].phoneNumber)) {
-            printError("So dien thoai khong hop le!");
+            printError("So dien thoai khong hop le validateCustomers!");
             valid = 0;
         }
 
         if (!isValidPlate(customers[i].carPlate)) {
-            printError("Bien so khong hop le!");
+            printError("Bien so khong hop le validateCustomers!");
             valid = 0;
         }
 
         if (!isValidName(customers[i].carType)) {
-            printError("Loai xe khong hop le!");
+            printError("Loai xe khong hop le validateCustomers!");
             valid = 0;
         }
     }
@@ -673,7 +673,11 @@ int loadCustomers(void) {
     if (!fp) return 0;
 
     fscanf(fp, "%d\n", &customerCount);
-
+    // sau khi load xong, có số lượng phần tử data mình phải duyệt check xem đã chuẩn hóa chưa rồi mới lưu
+    if (!validateCustomers()) {
+        printError("Du lieu khach hang co loi");
+        return 0;
+    }
     for (int i = 0; i < customerCount; i++) {
         fscanf(fp, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%d\n",
             customers[i].customerId,
@@ -741,7 +745,7 @@ int loadOrders(void) {
     if (!fp) return 0;
 
     fscanf(fp, "%d\n", &orderCount);
-
+    // sau khi load xong, có số lượng phần tử data mình phải duyệt check xem đã chuẩn hóa chưa rồi mới lưu
     for (int i = 0; i < orderCount; i++) {
         RepairOrder *o = &orders[i];
 
@@ -806,7 +810,7 @@ int loadServices(void) {
 
     char line[256];
     serviceCount = 0;
-
+    // sau khi load xong, có số lượng phần tử data mình phải duyệt check xem đã chuẩn hóa chưa rồi mới lưu
     while (fgets(line, sizeof(line), fp)) {
 
         // Tìm dòng bắt đầu của 1 service
@@ -846,7 +850,6 @@ int loadServices(void) {
 }
 
 void loadAllData(void) {
-    
 	loadCustomers();
     loadServices();
     loadOrders();
@@ -854,7 +857,6 @@ void loadAllData(void) {
 
 
 void saveAllData(void) {
-    
 	saveCustomers(); 
     saveServices();  
     saveOrders();    
@@ -2001,7 +2003,6 @@ static void menuService(void) {
 
 int main(void) {
     int choice;
-
     loadAllData();
 
     do {
