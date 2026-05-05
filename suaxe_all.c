@@ -1716,21 +1716,40 @@ printf(" %s\n", moneyFormatted);
 }
 
 void viewCustomerHistory(void) {
-   
+
     char phone[PHONE_LEN];
+
     printf("Nhap so dien thoai khach hang: ");
+    getchar(); // clear buffer (quan trọng)
     scanf("%[^\n]", phone);
+
     int index_array[MAX_REPAIR_ORDERS];
     int n = findOrdersByPhone(phone, index_array, MAX_REPAIR_ORDERS);
+
     if (n == 0) {
         printf("Khach hang chua co lich su sua chua.\n");
+        return;
     }
-    else{
-        for(int i = 0; i < n; i++){
-            printOrder(&orders[index_array[i]]);
+
+    int found = 0;
+
+    for (int i = 0; i < n; i++) {
+        RepairOrder *o = &orders[index_array[i]];
+
+        // chỉ lấy phiếu đã hoàn thành
+        if (o->status == 2) { // STATUS_DONE
+            printf("\n===== PHIEU SUA CHUA =====\n");
+            printf("Ma phieu: %s\n", o->orderId);
+
+            printOrder(o); // in chi tiết
+
+            found = 1;
         }
     }
-    
+
+    if (!found) {
+        printf("Khach hang co phieu nhung chua hoan thanh.\n");
+    }
 }
 
 void searchOrderMenu(void) {
