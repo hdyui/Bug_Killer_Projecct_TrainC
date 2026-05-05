@@ -715,11 +715,6 @@ int loadCustomers(void) {
 
     fscanf(fp, "%d\n", &customerCount);
 
-    if (!validateCustomers()) {
-       printError("Du lieu khach hang co loi");
-       debugValidateCustomers();
-       return 0;
-    }
     for (int i = 0; i < customerCount; i++) {
         fscanf(fp, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%d\n",
             customers[i].customerId,
@@ -729,6 +724,12 @@ int loadCustomers(void) {
             customers[i].carType,
             &customers[i].orderCount
         );
+    }
+    
+    if (!validateCustomers()) {
+       printError("Du lieu khach hang co loi");
+       debugValidateCustomers();
+       return 0;
     }
 
     fclose(fp);
@@ -787,14 +788,9 @@ int saveOrders(void) {
 
 int loadOrders(void) {
     FILE *fp = fopen(FILE_ORDERS, "r");
-    if (!fp){
-        printError("Du lieu phieu sua khong hop le!");
-        debugValidateOrders();
-        return 0;
-    }
-
+    
     fscanf(fp, "%d\n", &orderCount);
-
+    
     for (int i = 0; i < orderCount; i++) {
         RepairOrder *o = &orders[i];
 
@@ -808,10 +804,10 @@ int loadOrders(void) {
             &o->itemCount,
             &o->totalAmount
         );
-
+        
         for (int j = 0; j < o->itemCount; j++) {
             RepairItem *it = &o->items[j];
-
+            
             fscanf(fp, "%[^|]|%[^|]|%d|%lf|%lf\n",
                 it->serviceId,
                 it->serviceName,
@@ -821,13 +817,18 @@ int loadOrders(void) {
             );
         }
     }
-
+    
+    if (!fp){
+        printError("Du lieu phieu sua khong hop le!");
+        debugValidateOrders();
+        return 0;
+    }
     fclose(fp);
     return 1;
 }
 
 int saveServices(void) {
-
+    
     if (!validateServices()) {
         printError("Du lieu dich vu khong hop le. Khong the luu!");
         debugValidateServices();
@@ -857,12 +858,7 @@ int saveServices(void) {
 int loadServices(void) {
     FILE *fp = fopen(FILE_SERVICES, "r");
 
-    if (!validateServices()) {
-        printError("Du lieu dich vu khong hop le. Khong the luu!");
-        debugValidateServices();
-        return 0;
-    }
-
+    
     char line[256];
     serviceCount = 0;
     
@@ -872,32 +868,37 @@ int loadServices(void) {
         if (strncmp(line, "Service ID", 10) == 0) {
 
             if (serviceCount >= MAX_SERVICES) break;
-
+            
             Service *s = &services[serviceCount];
 
             // --- Service ID ---
             sscanf(line, "Service ID  : %s", s->serviceId);
-
+            
             // --- Name ---
             if (fgets(line, sizeof(line), fp)) {
                 sscanf(line, "Name        : %[^\n]", s->name);
             }
-
+            
             // --- Unit Price ---
             if (fgets(line, sizeof(line), fp)) {
                 sscanf(line, "Unit Price  : %lf", &s->unitPrice);
             }
-
+            
             // --- Is Active ---
             if (fgets(line, sizeof(line), fp)) {
                 sscanf(line, "Is Active   : %d", &s->isActive);
             }
-
+            
             // --- Skip dòng gạch ---
             fgets(line, sizeof(line), fp);
-
+            
             serviceCount++;
         }
+    }
+    if (!validateServices()) {
+        printError("Du lieu dich vu khong hop le");
+        debugValidateServices();
+        return 0;
     }
 
     fclose(fp);
@@ -1265,7 +1266,7 @@ int addService(void) {
     strcpy(services[serviceCount].name, tempName);
     services[serviceCount].unitPrice = tempPrice;
     services[serviceCount].isActive = 1;
-    sprintf(services[serviceCount].serviceId, "SV%06d", serviceCount + 1);
+    generateServiceId();
 
     /* 5. Tăng biến đếm và lưu file */
     serviceCount++;
@@ -1876,12 +1877,73 @@ void reportDailyRevenue(void) {
 }
 
 void reportTopServices(void) {
-    /* TODO:
-     * 1. Tạo mảng đếm theo serviceId
-     * 2. Duyệt tất cả orders[].items[], cộng quantity vào bộ đếm tương ứng
-     * 3. Sắp xếp giảm dần
-     * 4. In top 5
-     */
+
+    int quantities[MAX_SERVICES] = {0}; // Mảng đếm số lượng bán được
+    int indices[MAX_SERVICES];          // Mảng lưu vị trí gốc của dịch vụ
+
+    // Khởi tạo mảng indices (0, 1, 2, ..., serviceCount - 1)
+    for (int i = 0; i < serviceCount; i++) {
+        indices[i] = i;
+    }
+
+    // 2. Duyệt qua tất cả hóa đơn để cộng dồn số lượng
+    for (int i = 0; i < orderCount; i++) {
+        for (int j = 0; j < orders[i].itemCount; j++) {
+            RepairItem *item = &orders[i].items[j];
+            
+            // Tìm vị trí của dịch vụ này trong mảng services gốc
+            int sIdx = findServiceById(item->serviceId);
+            
+            // Nếu tìm thấy, cộng dồn số lượng vào vị trí tương ứng
+            if (sIdx != -1) {
+                quantities[sIdx] += item->quantity;
+            }
+        }
+    }
+
+    // 3. Sắp xếp mảng indices dựa trên giá trị của mảng quantities (Sắp xếp giảm dần)
+    for (int i = 0; i < serviceCount - 1; i++) {
+        for (int j = i + 1; j < serviceCount; j++) {
+            // So sánh số lượng thông qua cái index
+            if (quantities[indices[i]] < quantities[indices[j]]) {
+                // Đổi chỗ index, KHÔNG đổi chỗ dữ liệu gốc
+                int tempIdx = indices[i];
+                indices[i] = indices[j];
+                indices[j] = tempIdx;
+            }
+        }
+    }
+
+    // 4. In kết quả Top 5
+    printf("\n=================================================================\n");
+    printf("                TOP 5 DICH VU DUOC SU DUNG NHIEU NHAT            \n");
+    printf("=================================================================\n");
+    printf("%-12s | %-35s | %-10s\n", "Ma DV", "Ten dich vu", "Tong SL");
+    printf("-----------------------------------------------------------------\n");
+
+    int printed = 0;
+    for (int i = 0; i < serviceCount; i++) {
+        int originalIdx = indices[i]; // Lấy vị trí gốc đã được xếp hạng
+        
+        // Nếu gặp dịch vụ có số lượng = 0 thì dừng luôn (vì đã xếp giảm dần)
+        if (quantities[originalIdx] == 0) {
+            break;
+        }
+
+        // Tận dụng mảng services gốc để in Tên và ID
+        printf("%-12s | %-35s | %d\n", 
+            services[originalIdx].serviceId, 
+            services[originalIdx].name, 
+            quantities[originalIdx]);
+        
+        printed++;
+        if (printed == 5) break; // Chỉ in tối đa 5 dịch vụ
+    }
+
+    if (printed == 0) {
+        printf("Chua co du lieu dich vu hoac chua co hoa don nao!\n");
+    }
+    printf("=================================================================\n\n");
 }
 int createInvoice(const char * orderId){
     int orderIdx = findOrderById(orderId);
