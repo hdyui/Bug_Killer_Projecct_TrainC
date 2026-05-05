@@ -705,7 +705,7 @@ int saveCustomers(void) {
     }
 
     fclose(fp);
-    printSuccess("Da luu du lieu khach hang!");
+    //printSuccess("Da luu du lieu khach hang!");
     return 1;
 }
 
@@ -964,7 +964,7 @@ int addCustomer(void) {
     }
     /* --- Nhập biển số xe --- */
     while (1) {
-        printf("  Bien so xe (VD: 51F-123.45): ");
+        printf("  Bien so xe (VD: 51FF-123.45): ");
         scanf(" %14s", tempPlate);
         while (getchar() != '\n');
         if (isValidPlate(tempPlate) == 0) {
@@ -1632,12 +1632,10 @@ int findOrderById(const char *orderId) {
 
 int findOrdersByPhone(const char *phone, int *result, int maxResult) {
     int count = 0;
-
     for (int i = 0; i < orderCount; i++) {
         if (count >= maxResult){
             break; 
         }
-
         if (strcmp(orders[i].customerPhone, phone) == 0) {
             result[count] = i; 
             count++;          
@@ -1859,7 +1857,6 @@ void reportDailyRevenue(void) {
         if (orderDate->tm_mday == day &&
             orderDate->tm_mon  == month &&
             orderDate->tm_year == year) {
-
             totalRevenue += o->totalAmount;
             totalOrders++;
         }
@@ -1877,7 +1874,6 @@ void reportDailyRevenue(void) {
 }
 
 void reportTopServices(void) {
-
     int quantities[MAX_SERVICES] = {0}; // Mảng đếm số lượng bán được
     int indices[MAX_SERVICES];          // Mảng lưu vị trí gốc của dịch vụ
 
@@ -2207,6 +2203,5 @@ int main(void) {
                 printError("Lua chon khong hop le. Vui long thu lai.");
         }
     } while (choice != 0);
-
     return 0;
 }
