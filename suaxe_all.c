@@ -1437,7 +1437,7 @@ int createRepairOrder(void) {
         scanf("%d", &isConfirm);
         while (getchar() != '\n');
         if(findCustomerByPhone(phoneNumber) == -1){
-            printf("Khong ton tai so dien nay nay: %s\n", phoneNumber);
+            printError("Khong ton tai so dien thoai nay!");
         }
         else{
             printf("%-20s %-20s %-20s %-20s %-20s %-20s\n",
