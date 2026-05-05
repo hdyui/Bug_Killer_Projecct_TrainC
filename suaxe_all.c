@@ -1435,7 +1435,11 @@ int createRepairOrder(void) {
         printf("[0] Nhap lai\n");
         printf("Nhap lua chon: ");
         scanf("%d", &isConfirm);
-        while (getchar() != '\n');
+      
+        while (getchar() != '\n');  
+        if(isConfirm == 0){
+            continue;
+        }
         if(findCustomerByPhone(phoneNumber) == -1){
             printError("Khong ton tai so dien thoai nay!");
         }
@@ -1807,7 +1811,7 @@ void searchOrderMenu(void) {
         printf("Nhap ma phieu: ");
         scanf("%[^\n]", OrderId);
         int idx = findOrderById(OrderId); 
-        if(idx = -1){
+        if(idx == -1){
             printf("Khong tim thay phieu\n");
         }
         else{
