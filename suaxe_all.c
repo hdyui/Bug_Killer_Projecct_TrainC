@@ -1602,8 +1602,8 @@ int updateOrderStatus(void) {
     }
 
     // Update trạng thái
-    o->status++;
-    o->updatedDate = time(NULL);
+  	o->status++; 
+	o->updatedDate = time(NULL);
 
     // Lưu file
     if (!saveOrders()) {
@@ -1839,13 +1839,55 @@ void searchOrderMenu(void) {
  * SECTION 10: REPORT (NÂNG CAO)
  * ========================================================= */
 
+//void reportDailyRevenue(void) {
+//    time_t now = time(NULL);
+//    struct tm *today = localtime(&now);
+//
+//    int day   = today->tm_mday;
+//    int month = today->tm_mon;
+//    int year  = today->tm_year;
+//
+//    double totalRevenue = 0;
+//    int totalOrders = 0;
+//
+//    for (int i = 0; i < orderCount; i++) {
+//        RepairOrder *o = &orders[i];
+//
+//        // chỉ lấy phiếu đã hoàn thành
+//        if (o->status != STATUS_DONE) continue;
+//
+//        // dùng updatedDate (ngày hoàn thành)
+//        struct tm *orderDate = localtime(&o->updatedDate);
+//
+//        if (orderDate->tm_mday == day &&
+//            orderDate->tm_mon  == month &&
+//            orderDate->tm_year == year) {
+//
+//            totalRevenue += o->totalAmount;
+//            totalOrders++;
+//        }
+//    }
+//
+//    printHeader("DOANH THU TRONG NGAY");
+//
+//    char moneyBuf[30];
+//    formatMoney(totalRevenue, moneyBuf);
+//
+//    printf("  So phieu hoan thanh: %d\n", totalOrders);
+//    printf("  Tong doanh thu     : %s\n", moneyBuf);
+//
+//    printDivider();
+//}
+
 void reportDailyRevenue(void) {
     time_t now = time(NULL);
-    struct tm *today = localtime(&now);
 
-    int day   = today->tm_mday;
-    int month = today->tm_mon;
-    int year  = today->tm_year;
+    // copy ra biến riêng để tránh bị overwrite
+    struct tm today = *localtime(&now);
+
+    int day   = today.tm_mday;
+    int month = today.tm_mon;
+    int year  = today.tm_year;
 
     double totalRevenue = 0;
     int totalOrders = 0;
@@ -1853,15 +1895,16 @@ void reportDailyRevenue(void) {
     for (int i = 0; i < orderCount; i++) {
         RepairOrder *o = &orders[i];
 
-        // chỉ lấy phiếu đã hoàn thành
+        // chỉ xét phiếu đã hoàn thành
         if (o->status != STATUS_DONE) continue;
 
         // dùng updatedDate (ngày hoàn thành)
-        struct tm *orderDate = localtime(&o->updatedDate);
+        // copy struct để tránh lỗi localtime
+        struct tm orderDate = *localtime(&o->updatedDate);
 
-        if (orderDate->tm_mday == day &&
-            orderDate->tm_mon  == month &&
-            orderDate->tm_year == year) {
+        if (orderDate.tm_mday == day &&
+            orderDate.tm_mon  == month &&
+            orderDate.tm_year == year) {
 
             totalRevenue += o->totalAmount;
             totalOrders++;
@@ -1877,6 +1920,26 @@ void reportDailyRevenue(void) {
     printf("  Tong doanh thu     : %s\n", moneyBuf);
 
     printDivider();
+    
+    printf("Cu the:\n");
+
+for (int i = 0; i < orderCount; i++) {
+	RepairOrder *o = &orders[i];
+
+    if (o->status != STATUS_DONE) continue;
+
+    struct tm orderDate = *localtime(&o->updatedDate);
+
+    if (orderDate.tm_mday == day &&
+        orderDate.tm_mon  == month &&
+        orderDate.tm_year == year) {
+
+        printf(" + %s = %.0f\n", o->orderId, o->totalAmount);
+
+        totalRevenue += o->totalAmount;
+        totalOrders++;
+    }
+}
 }
 
 void reportTopServices(void) {
