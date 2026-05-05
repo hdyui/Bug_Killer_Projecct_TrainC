@@ -1751,8 +1751,10 @@ void viewCustomerHistory(void) {
     char phone[PHONE_LEN];
 
     printf("Nhap so dien thoai khach hang: ");
-    getchar(); // clear buffer (quan trọng)
-    scanf("%[^\n]", phone);
+
+    // đọc input an toàn
+    fgets(phone, PHONE_LEN, stdin);
+    strTrim(phone); // loại bỏ \n và space
 
     int index_array[MAX_REPAIR_ORDERS];
     int n = findOrdersByPhone(phone, index_array, MAX_REPAIR_ORDERS);
@@ -1772,7 +1774,7 @@ void viewCustomerHistory(void) {
             printf("\n===== PHIEU SUA CHUA =====\n");
             printf("Ma phieu: %s\n", o->orderId);
 
-            printOrder(o); // in chi tiết
+            printOrder(o);
 
             found = 1;
         }
