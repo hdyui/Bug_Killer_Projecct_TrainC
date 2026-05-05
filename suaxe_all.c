@@ -1834,7 +1834,6 @@ void searchOrderMenu(void) {
  * ========================================================= */
 
 void reportDailyRevenue(void) {
-	// hàm này có cần so sánh ngày không ?
     time_t now = time(NULL);
     struct tm *today = localtime(&now);
 
@@ -1848,15 +1847,16 @@ void reportDailyRevenue(void) {
     for (int i = 0; i < orderCount; i++) {
         RepairOrder *o = &orders[i];
 
-        // chỉ xét phiếu đã hoàn thành
+        // chỉ lấy phiếu đã hoàn thành
         if (o->status != STATUS_DONE) continue;
 
-        struct tm *orderDate = localtime(&o->createdDate);
+        // dùng updatedDate (ngày hoàn thành)
+        struct tm *orderDate = localtime(&o->updatedDate);
 
-        // so sánh ngày / tháng / năm
         if (orderDate->tm_mday == day &&
             orderDate->tm_mon  == month &&
             orderDate->tm_year == year) {
+
             totalRevenue += o->totalAmount;
             totalOrders++;
         }
