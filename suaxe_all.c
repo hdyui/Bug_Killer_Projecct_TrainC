@@ -144,7 +144,10 @@ void   printStatus(int status);
 void   formatMoney(double amount, char *buffer);
 int    validateServices(void);
 int    validateCustomers(void);
+void   debugValidateCustomers(void);
 int    validateOrders(void);
+void   debugValidateOrders(void);
+
 
 /* fileio */
 int    saveCustomers(void);
@@ -564,74 +567,88 @@ int validateServices(void) {
 }
 
 int validateCustomers(void) {
-    int valid = 1;
-
     for (int i = 0; i < customerCount; i++) {
 
-        if (!isValidName(customers[i].fullName)) {
-            printError("Ten khach hang khong hop le validateCustomers!");
-            valid = 0;
-        }
+        if (!isValidName(customers[i].fullName))
+            return 0;
 
-        if (!isValidPhone(customers[i].phoneNumber)) {
-            printError("So dien thoai khong hop le validateCustomers!");
-            valid = 0;
-        }
+        if (!isValidPhone(customers[i].phoneNumber))
+            return 0;
 
-        if (!isValidPlate(customers[i].carPlate)) {
-            printError("Bien so khong hop le validateCustomers!");
-            valid = 0;
-        }
+        if (!isValidPlate(customers[i].carPlate))
+            return 0;
 
-        if (!isValidName(customers[i].carType)) {
-            printError("Loai xe khong hop le validateCustomers!");
-            valid = 0;
-        }
+        if (!isValidName(customers[i].carType))
+            return 0;
     }
+    return 1;
+}
+void debugValidateCustomers(void) {
+    for (int i = 0; i < customerCount; i++) {
 
-    return valid;
+        if (!isValidName(customers[i].fullName))
+            printError("Ten khach hang khong hop le!");
+
+        if (!isValidPhone(customers[i].phoneNumber))
+            printError("So dien thoai khong hop le!");
+
+        if (!isValidPlate(customers[i].carPlate))
+            printError("Bien so khong hop le!");
+
+        if (!isValidName(customers[i].carType))
+            printError("Loai xe khong hop le!");
+    }
 }
 
 int validateOrders(void) {
-    int valid = 1;
-
     for (int i = 0; i < orderCount; i++) {
 
-        if (strlen(orders[i].orderId) == 0) {
-            printError("Order ID rong!");
-            valid = 0;
-        }
+        if (strlen(orders[i].orderId) == 0)
+            return 0;
 
-        if (!isValidPhone(orders[i].customerPhone)) {
-            printError("SDT trong order khong hop le!");
-            valid = 0;
-        }
+        if (!isValidPhone(orders[i].customerPhone))
+            return 0;
 
-        if (orders[i].status < 0 || orders[i].status > 2) {
-            printError("Trang thai order khong hop le!");
-            valid = 0;
-        }
+        if (orders[i].status < 0 || orders[i].status > 2)
+            return 0;
 
-        if (orders[i].itemCount < 0 || orders[i].itemCount > MAX_ITEMS_PER_ORDER) {
-            printError("So luong item khong hop le!");
-            valid = 0;
-        }
+        if (orders[i].itemCount < 0 || orders[i].itemCount > MAX_ITEMS_PER_ORDER)
+            return 0;
 
-        if (orders[i].totalAmount < 0) {
-            printError("Tong tien khong hop le!");
-            valid = 0;
-        }
+        if (orders[i].totalAmount < 0)
+            return 0;
 
-        // check từng item
         for (int j = 0; j < orders[i].itemCount; j++) {
-            if (strlen(orders[i].items[j].serviceId) == 0) {
-                printError("Service ID trong item rong!");
-                valid = 0;
-            }
+            if (strlen(orders[i].items[j].serviceId) == 0)
+                return 0;
         }
     }
+    return 1;
+}
 
-    return valid;
+void debugValidateOrders(void) {
+    for (int i = 0; i < orderCount; i++) {
+
+        if (strlen(orders[i].orderId) == 0)
+            printError("Order ID rong!");
+
+        if (!isValidPhone(orders[i].customerPhone))
+            printError("SDT khong hop le!");
+
+        if (orders[i].status < 0 || orders[i].status > 2)
+            printError("Trang thai khong hop le!");
+
+        if (orders[i].itemCount < 0 || orders[i].itemCount > MAX_ITEMS_PER_ORDER)
+            printError("So item khong hop le!");
+
+        if (orders[i].totalAmount < 0)
+            printError("Tong tien khong hop le!");
+
+        for (int j = 0; j < orders[i].itemCount; j++) {
+            if (strlen(orders[i].items[j].serviceId) == 0)
+                printError("Service ID rong!");
+        }
+    }
 }
 
 /* =========================================================
@@ -641,7 +658,9 @@ int validateOrders(void) {
 int saveCustomers(void) {
 
     if (!validateCustomers()) {
-        printError("Du lieu khach hang co loi, van luu!");
+        printError("Du lieu khach hang khong hop le!");
+        debugValidateCustomers(); // in chi tiet
+        return 0; // KHÔNG lưu
     }
 
     FILE *fp = fopen(FILE_CUSTOMERS, "w");
@@ -665,6 +684,7 @@ int saveCustomers(void) {
     }
 
     fclose(fp);
+    printSuccess("Da luu du lieu khach hang!");
     return 1;
 }
 
@@ -697,7 +717,9 @@ int loadCustomers(void) {
 int saveOrders(void) {
 
     if (!validateOrders()) {
-        printError("Du lieu phieu sua co loi, van luu!");
+        printError("Du lieu phieu sua khong hop le!");
+        debugValidateOrders();
+        return 0;
     }
 
     FILE *fp = fopen(FILE_ORDERS, "w");
@@ -737,6 +759,7 @@ int saveOrders(void) {
     }
 
     fclose(fp);
+    printSuccess("Da luu phieu sua!");
     return 1;
 }
 
