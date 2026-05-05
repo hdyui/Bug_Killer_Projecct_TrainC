@@ -566,6 +566,27 @@ int validateServices(void) {
     return 1;
 }
 
+void debugValidateServices(void) {
+    for (int i = 0; i < serviceCount; i++) {
+
+        // ID không rỗng
+        if (strlen(services[i].serviceId) == 0)
+            printError("Service ID rong!");
+
+        // Name không rỗng
+        if (strlen(services[i].name) == 0)
+            printError("Ten dich vu rong!");
+
+        // Giá phải > 0
+        if (services[i].unitPrice <= 0)
+            printError("Don gia khong hop le (phai > 0)!");
+
+        // isActive phải là 0 hoặc 1
+        if (services[i].isActive != 0 && services[i].isActive != 1)
+            printError("Trang thai hoat dong khong hop le (chi duoc 0 hoac 1)!");
+    }
+}
+
 int validateCustomers(void) {
     for (int i = 0; i < customerCount; i++) {
 
@@ -693,11 +714,12 @@ int loadCustomers(void) {
     if (!fp) return 0;
 
     fscanf(fp, "%d\n", &customerCount);
-    // sau khi load xong, có số lượng phần tử data mình phải duyệt check xem đã chuẩn hóa chưa rồi mới lưu
-//    if (!validateCustomers()) {
-//        printError("Du lieu khach hang co loi");
-//        return 0;
-//    }
+
+    if (!validateCustomers()) {
+       printError("Du lieu khach hang co loi");
+       debugValidateCustomers();
+       return 0;
+    }
     for (int i = 0; i < customerCount; i++) {
         fscanf(fp, "%[^|]|%[^|]|%[^|]|%[^|]|%[^|]|%d\n",
             customers[i].customerId,
@@ -765,10 +787,14 @@ int saveOrders(void) {
 
 int loadOrders(void) {
     FILE *fp = fopen(FILE_ORDERS, "r");
-    if (!fp) return 0;
+    if (!fp){
+        printError("Du lieu phieu sua khong hop le!");
+        debugValidateOrders();
+        return 0;
+    }
 
     fscanf(fp, "%d\n", &orderCount);
-    // sau khi load xong, có số lượng phần tử data mình phải duyệt check xem đã chuẩn hóa chưa rồi mới lưu
+
     for (int i = 0; i < orderCount; i++) {
         RepairOrder *o = &orders[i];
 
@@ -804,6 +830,7 @@ int saveServices(void) {
 
     if (!validateServices()) {
         printError("Du lieu dich vu khong hop le. Khong the luu!");
+        debugValidateServices();
         return 0;
     }
 
@@ -829,11 +856,16 @@ int saveServices(void) {
 
 int loadServices(void) {
     FILE *fp = fopen(FILE_SERVICES, "r");
-    if (!fp) return 0;
+
+    if (!validateServices()) {
+        printError("Du lieu dich vu khong hop le. Khong the luu!");
+        debugValidateServices();
+        return 0;
+    }
 
     char line[256];
     serviceCount = 0;
-    // sau khi load xong, có số lượng phần tử data mình phải duyệt check xem đã chuẩn hóa chưa rồi mới lưu
+    
     while (fgets(line, sizeof(line), fp)) {
 
         // Tìm dòng bắt đầu của 1 service
