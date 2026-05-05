@@ -1809,7 +1809,7 @@ void searchOrderMenu(void) {
         printf("Nhap ma phieu: ");
         scanf("%[^\n]", OrderId);
         int idx = findOrderById(OrderId); 
-        if(idx = -1){
+        if(idx == -1){
             printf("Khong tim thay phieu\n");
         }
         else{
