@@ -1436,16 +1436,14 @@ int createRepairOrder(void) {
         if(strcmp(phoneNumber,"Q") == 0){
             return 0;
         }
-        if(!isValidPhone(phoneNumber)){
-            printError("SDT khong hop le, vui long nhap lai!");
-        }
+       
         printf("Xac nhan so dien thoai ban muon tim: %s\n", phoneNumber);
         printf("[1] Xac nhan\n");
         printf("[0] Nhap lai\n");
         printf("Nhap lua chon: ");
         scanf("%d", &isConfirm);
-      
-        while (getchar() != '\n');  
+        while (getchar() != '\n'); 
+
         if(isConfirm == 0){
             continue;
         }
@@ -1465,14 +1463,20 @@ int createRepairOrder(void) {
                 printf("Vui long nhap [1] hoac [0]\n");
         }
     }
-    while(isConfirm != 1 || findCustomerByPhone(phoneNumber) == -1 || !isValidPhone(phoneNumber));
+    while(isConfirm != 1 || findCustomerByPhone(phoneNumber) == -1);
     generateOrderId();
     strcpy(orders[orderCount].customerPhone, customers[index].phoneNumber);
     char symptom[SYMPTOM_LEN];
     do{
-        printf("Nhap tinh trang xe cua ban: ");
+        printf("Nhap tinh trang xe cua ban (Nhap Q de quay lai): ");
         scanf("%[^\n]", symptom);
         while (getchar() != '\n');
+        for(int i = 0; symptom[i] != '\0'; i++){
+            symptom[i] = toupper(symptom[i]);
+        }
+        if(strcmp(symptom,"Q") == 0){
+            return 0;
+        }
     }
     while(strlen(symptom) == 0);
     strcpy(orders[orderCount].symptom, symptom);
@@ -1485,9 +1489,15 @@ int createRepairOrder(void) {
     listAllServices();
     char serviceId[ID_LEN];
     do{
-        printf("Nhap ma dich vu can them vao phieu (VD: SV000001), nhap 0 de ket thuc: ");
+        printf("Nhap ma dich vu can them vao phieu (VD: SV000001), nhap 0 de ket thuc, nhap Q de quay lai: ");
         scanf("%[^\n]", serviceId);
         while (getchar() != '\n');
+        for(int i = 0; serviceId[i] != '\0'; i++){
+            serviceId[i] = toupper(serviceId[i]);
+        }
+        if(strcmp(serviceId,"Q") == 0){
+            return 0;
+        }
         if(strcmp(serviceId, "0") == 0){
             break;
         }
