@@ -1465,7 +1465,7 @@ int createRepairOrder(void) {
                 printf("Vui long nhap [1] hoac [0]\n");
         }
     }
-    while(isConfirm != 1 || findCustomerByPhone(phoneNumber) == -1);
+    while(isConfirm != 1 || findCustomerByPhone(phoneNumber) == -1 || !isValidPhone(phoneNumber));
     generateOrderId();
     strcpy(orders[orderCount].customerPhone, customers[index].phoneNumber);
     char symptom[SYMPTOM_LEN];
