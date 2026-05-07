@@ -1427,9 +1427,18 @@ int createRepairOrder(void) {
     }
    
     do{
-        printf("Nhap so dien thoai khach hang: ");
+        printf("Nhap so dien thoai khach hang (Nhap Q de quay lai): ");
         scanf("%[^\n]", phoneNumber);
-        
+        while (getchar() != '\n');
+        for(int i = 0; phoneNumber[i] != '\0'; i++){
+            phoneNumber[i] = toupper(phoneNumber[i]);
+        }
+        if(strcmp(phoneNumber,"Q") == 0){
+            return 0;
+        }
+        if(!isValidPhone(phoneNumber)){
+            printError("SDT khong hop le, vui long nhap lai!");
+        }
         printf("Xac nhan so dien thoai ban muon tim: %s\n", phoneNumber);
         printf("[1] Xac nhan\n");
         printf("[0] Nhap lai\n");
@@ -1440,7 +1449,7 @@ int createRepairOrder(void) {
         if(isConfirm == 0){
             continue;
         }
-        if(findCustomerByPhone(phoneNumber) == -1){
+        else if(findCustomerByPhone(phoneNumber) == -1){
             printError("Khong ton tai so dien thoai nay!");
         }
         else{
