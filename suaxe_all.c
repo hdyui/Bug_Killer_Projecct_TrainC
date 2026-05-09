@@ -230,6 +230,7 @@ int isValidPlate(const char *plate) {
     if (!isdigit(plate[7])) return 0;
     if (plate[8] != '.')    return 0;
     if (!isdigit(plate[9])) return 0;
+    if (!isdigit(plate[10])) return 0;
     return 1;
 }
 
@@ -938,9 +939,10 @@ int addCustomer(void) {
     /* --- Nhập họ tên --- */
     /* Lặp cho đến khi người dùng nhập tên không rỗng */
     do {
-        printf("  Ho va ten: ");
+        printf("  Ho va ten (0 de quay lai): ");
         scanf(" %99[^\n]", tempName);   
         while (getchar() != '\n');      
+        if (strcmp(tempName, "0") == 0) return 0;
         if ( !isValidName(tempName) ) {
             printError("Ho ten khong hop le.");
         }
@@ -948,9 +950,10 @@ int addCustomer(void) {
  
     /* --- Nhập số điện thoại --- */
     while (1) {
-        printf("  So dien thoai: ");
+        printf("  So dien thoai (0 de quay lai): ");
         scanf(" %10s", tempPhone);      
         while (getchar() != '\n');
+        if (strcmp(tempPhone, "0") == 0) return 0;
         if (isValidPhone(tempPhone) == 0) {
             printError("SDT khong hop le (chi chua so, 10 ky tu).");
             continue;
@@ -964,9 +967,10 @@ int addCustomer(void) {
     }
     /* --- Nhập biển số xe --- */
     while (1) {
-        printf("  Bien so xe (VD: 51FF-123.45): ");
+        printf("  Bien so xe (0 de quay lai, VD: 51FF-123.45): ");
         scanf(" %14s", tempPlate);
         while (getchar() != '\n');
+        if (strcmp(tempPlate, "0") == 0) return 0;
         if (isValidPlate(tempPlate) == 0) {
             printError("Bien so khong hop le.");
             continue;
@@ -975,9 +979,10 @@ int addCustomer(void) {
     }
     /* --- Nhập loại xe --- */
     do {
-        printf("  Loai xe (VD: Xe may, O to, Xe dap dien): ");
+        printf("  Loai xe (0 de quay lai, VD: Xe may, O to, Xe dap dien): ");
         scanf(" %29[^\n]", tempType);
         while (getchar() != '\n');
+        if (strcmp(tempType, "0") == 0) return 0;
         if (!isValidName(tempType)) {
             printError("Loai xe khong hop le.");
         }
@@ -1004,8 +1009,9 @@ int editCustomer(void) {
  
     /* Bước 1: nhập SĐT cần sửa */
     do {
-    	printf("  Nhap SDT khach hang can sua: ");
+    	printf("  Nhap SDT khach hang can sua (0 de quay lai): ");
     	scanf(" %14s", phone);
+        if (strcmp(phone, "0") == 0) return 0;
     	if( !isValidPhone(phone) ){
     		printError("  SDT khong hop le, xin hay nhap lai!");
 		}
@@ -1033,23 +1039,27 @@ int editCustomer(void) {
  
     /* Bước 5: nhập giá trị mới, validate rồi gán vào customers[idx] */
     if (choice == 1) {
+        char tempName[NAME_LEN];
         do {
-            printf("  Ho ten moi: ");
-            scanf(" %99[^\n]", customers[idx].fullName);
+            printf("  Ho ten moi (0 de quay lai): ");
+            scanf(" %99[^\n]", tempName);
             while (getchar() != '\n');
-            if (!isValidName(customers[idx].fullName)) {
+            if (strcmp(tempName, "0") == 0) return 0;
+            if (!isValidName(tempName)) {
                 printError("Ho ten khong hop le.");
             }
-        } while (!isValidName(customers[idx].fullName));
+        } while (!isValidName(tempName));
+        strcpy(customers[idx].fullName, tempName);
  
     } else if (choice == 2) {
  
         /* Sửa biển số*/
         char newPlate[PLATE_LEN];
         while (1) {
-            printf("  Bien so xe moi: ");
+            printf("  Bien so xe moi (0 de quay lai): ");
             scanf(" %14s", newPlate);
             while (getchar() != '\n');
+            if (strcmp(newPlate, "0") == 0) return 0;
             if (isValidPlate(newPlate) == 0) {
                 printError("Bien so khong hop le.");
                 continue;
@@ -1061,14 +1071,17 @@ int editCustomer(void) {
     } else if (choice == 3) {
  
         /* Sửa loại xe - không được rỗng */
+        char tempType[CAR_TYPE_LEN];
         do {
-            printf("  Loai xe moi: ");
-            scanf(" %29[^\n]", customers[idx].carType);
+            printf("  Loai xe moi (0 de quay lai): ");
+            scanf(" %29[^\n]", tempType);
             while (getchar() != '\n');
-            if (!isValidName(customers[idx].carType) ) {
+            if (strcmp(tempType, "0") == 0) return 0;
+            if (!isValidName(tempType) ) {
                 printError("Loai xe khong hop le.");
             }
-        } while (!isValidName(customers[idx].carType));
+        } while (!isValidName(tempType));
+        strcpy(customers[idx].carType, tempType);
  
     } else if (choice == 0) {
         puts("  Da huy thao tac.");
@@ -1121,12 +1134,17 @@ void searchCustomerMenu(void) {
     int idx;
  
     /* Hiển thị lựa chọn tìm kiếm */
-    printf("  [1] Tim theo SDT\n");
-    printf("  [2] Tim theo bien so xe\n");
-    printf("  [0] Quay lai\n");
-    printf("  Lua chon: ");
-    scanf(" %d", &choice);
-    while (getchar() != '\n');
+    do {
+        printf("  [1] Tim theo SDT\n");
+        printf("  [2] Tim theo bien so xe\n");
+        printf("  [0] Quay lai\n");
+        printf("  Lua chon: ");
+        scanf(" %d", &choice);
+        while (getchar() != '\n');
+        if (choice != 1 && choice != 2 && choice != 0) {
+            printError("Lua chon khong hop le.");
+        }
+    } while (choice != 1 && choice != 2 && choice != 0);
  
     idx = -1;
  
@@ -1154,8 +1172,7 @@ void searchCustomerMenu(void) {
         while(!isValidPlate(plate));
         idx = findCustomerByPlate(plate);
  
-    } else {
-        //printError("Lua chon khong hop le.");
+    } else if (choice == 0) {
         return;
     }
  
@@ -1240,8 +1257,9 @@ int addService(void) {
 
     /* 2. Nhập tên dịch vụ (không rỗng) */
     do {
-        printf("  Ten dich vu: ");
+        printf("  Ten dich vu (0 de quay lai): ");
         readLine(tempName, SERVICE_NAME_LEN);
+        if (strcmp(tempName, "0") == 0) return 0;
         if (tempName[0] == '\0') {
             printError("Ten dich vu khong duoc de trong.");
         }
@@ -1249,14 +1267,15 @@ int addService(void) {
 
     /* 3. Nhập đơn giá (phải > 0) */
     do {
-        printf("  Don gia (VND): ");
+        printf("  Don gia (VND, 0 de quay lai): ");
         if (scanf("%lf", &tempPrice) != 1) {
             while (getchar() != '\n'); /* Xóa buffer nếu nhập sai kiểu (chữ) */
             printError("Don gia phai la mot so.");
             tempPrice = -1;
         } else {
             while (getchar() != '\n'); /* Xóa buffer sau khi lấy số */
-            if (tempPrice <= 0) {
+            if (tempPrice == 0) return 0;
+            if (tempPrice < 0) {
                 printError("Don gia phai lon hon 0.");
             }
         }
@@ -1292,8 +1311,9 @@ int editService(void) {
     if (serviceCount == 0) return 0; /* Không có dịch vụ để sửa */
 
     char id[ID_LEN];
-    printf("  Nhap ma dich vu can sua (VD: SV000001): ");
+    printf("  Nhap ma dich vu can sua (0 de quay lai, VD: SV000001): ");
     readLine(id, ID_LEN);
+    if (strcmp(id, "0") == 0) return 0;
 
     int idx = findServiceById(id);
     if (idx == -1) {
@@ -1316,8 +1336,9 @@ int editService(void) {
     if (choice == 1) {
         char newName[SERVICE_NAME_LEN];
         do {
-            printf("  Ten dich vu moi: ");
+            printf("  Ten dich vu moi (0 de quay lai): ");
             readLine(newName, SERVICE_NAME_LEN);
+            if (strcmp(newName, "0") == 0) return 0;
             if (newName[0] == '\0') {
                 printError("Ten dich vu khong duoc de trong.");
             }
@@ -1327,14 +1348,15 @@ int editService(void) {
     } else if (choice == 2) {
         double newPrice;
         do {
-            printf("  Don gia moi (VND): ");
+            printf("  Don gia moi (VND, 0 de quay lai): ");
             if (scanf("%lf", &newPrice) != 1) {
                 while (getchar() != '\n');
                 printError("Don gia phai la mot so.");
                 newPrice = -1;
             } else {
                 while (getchar() != '\n');
-                if (newPrice <= 0) {
+                if (newPrice == 0) return 0;
+                if (newPrice < 0) {
                     printError("Don gia phai lon hon 0.");
                 }
             }
@@ -1535,11 +1557,16 @@ int addItemToOrder(int orderIdx, int serviceIdx) {
         status = 0;
         return status;
     }   
-    int quantity;
+    int quantity = 0;
     do{
-        printf("Nhap so luong: ");
-        scanf("%d", &quantity);
+        printf("Nhap so luong (0 de huy them DV nay): ");
+        if (scanf("%d", &quantity) != 1) {
+            while(getchar () != '\n');
+            quantity = -1;
+            continue;
+        }
         while(getchar () != '\n');
+        if (quantity == 0) return 0;
     }
     while(quantity <= 0);
     int itemIdx = orders[orderIdx].itemCount;
@@ -1576,8 +1603,9 @@ int updateOrderStatus(void) {
      */
     char orderId[ID_LEN];
     
-    printf("Nhap ma phieu: ");
+    printf("Nhap ma phieu (0 de quay lai): ");
     readLine(orderId, ID_LEN);
+    if (strcmp(orderId, "0") == 0) return 0;
 
     int idx = findOrderById(orderId);
     if (idx == -1) {
@@ -1773,11 +1801,12 @@ void viewCustomerHistory(void) {
 
     char phone[PHONE_LEN];
 
-    printf("Nhap so dien thoai khach hang: ");
+    printf("Nhap so dien thoai khach hang (0 de quay lai): ");
 
     // đọc input an toàn
     fgets(phone, PHONE_LEN, stdin);
     strTrim(phone); // loại bỏ \n và space
+    if (strcmp(phone, "0") == 0) return;
 
     int index_array[MAX_REPAIR_ORDERS];
     int n = findOrdersByPhone(phone, index_array, MAX_REPAIR_ORDERS);
@@ -1815,20 +1844,23 @@ void searchOrderMenu(void) {
         printf("Lua chon tim kiem:\n");
         printf("[1] Tim theo ma phieu\n");
         printf("[2] Tim theo bien so xe\n");
+        printf("[0] Quay lai\n");
         printDivider();
         printf("Nhap lua chon: ");
         scanf("%d", &choice);
         while (getchar() != '\n');
-        if(choice != 1 && choice != 2){
-            printf("Vui long nhap [1] hoac [2]\n");
+        if(choice != 1 && choice != 2 && choice != 0){
+            printf("Vui long nhap [0], [1] hoac [2]\n");
         }
         
     }
-    while(choice != 1 && choice != 2);
+    while(choice != 1 && choice != 2 && choice != 0);
+    if (choice == 0) return;
     if(choice == 1){
         char OrderId[ID_LEN];
-        printf("Nhap ma phieu: ");
-        scanf("%[^\n]", OrderId);
+        printf("Nhap ma phieu (0 de quay lai): ");
+        readLine(OrderId, ID_LEN);
+        if (strcmp(OrderId, "0") == 0) return;
         int idx = findOrderById(OrderId); 
         if(idx == -1){
             printf("Khong tim thay phieu\n");
@@ -1839,8 +1871,9 @@ void searchOrderMenu(void) {
     }
     else if(choice == 2){
         char plate[PLATE_LEN];
-        printf("Nhap bien so xe: ");
-        scanf("%[^\n]", plate);
+        printf("Nhap bien so xe (0 de quay lai): ");
+        readLine(plate, PLATE_LEN);
+        if (strcmp(plate, "0") == 0) return;
         int idxArr[MAX_REPAIR_ORDERS];
         int n = findOrdersByPlate(plate, idxArr, MAX_REPAIR_ORDERS);
         if(n == 0){
@@ -2088,8 +2121,9 @@ void reportMenu(void) {
             case 2: reportTopServices();  break;
             case 3: {
                 char oid[ID_LEN];
-                printf("  Nhap ma phieu: ");
+                printf("  Nhap ma phieu (0 de quay lai): ");
                 readLine(oid, ID_LEN);
+                if (strcmp(oid, "0") == 0) break;
                 exportInvoice(oid);
                 break;
             }
@@ -2154,8 +2188,9 @@ static void menuRepair(void) {
                 break;
             case 3: {
                 char oid[ID_LEN];
-                printf("  Nhap ma phieu: ");
+                printf("  Nhap ma phieu (0 de quay lai): ");
                 readLine(oid, ID_LEN);
+                if (strcmp(oid, "0") == 0) break;
                 int idx = findOrderById(oid);
                 if (idx == -1) printError("Khong tim thay phieu.");
                 else printOrder(&orders[idx]);
@@ -2165,10 +2200,19 @@ static void menuRepair(void) {
                 listOrders(-1);        
                 break;
             case 5: {
-                int st;
-                printf("  Trang thai [0=Tiep nhan, 1=Dang sua, 2=Hoan thanh]: ");
-                scanf(" %d", &st);
+                int st = -1;
+                printf("  Trang thai [0=Tiep nhan, 1=Dang sua, 2=Hoan thanh, 3=Quay lai]: ");
+                if (scanf(" %d", &st) != 1) {
+                    while (getchar() != '\n');
+                    printError("Trang thai khong hop le.");
+                    break;
+                }
                 while (getchar() != '\n');
+                if (st == 3) break;
+                if (st < 0 || st > 2) {
+                    printError("Trang thai khong hop le.");
+                    break;
+                }
                 listOrders(st);
                 break;
             }
