@@ -1201,8 +1201,6 @@ void printCustomer(const Customer *c) {
 }
 
 void listAllCustomers(void) {
-	////////// Mỗi Khách hàng có một sdt và biển số xe duy nhất ( cần cải tiến ) 
-    /* Kiểm tra danh sách rỗng */
     if (customerCount == 0) {
         puts("  Chua co khach hang nao trong he thong.");
         return;

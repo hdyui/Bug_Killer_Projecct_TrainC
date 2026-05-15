@@ -17,39 +17,10 @@ RepairOrder orders[MAX_REPAIR_ORDERS];
 int         orderCount = 0;
 
 /* =========================================================
- * KHỞI TẠO
- * ========================================================= */
-
-void initOrders(void) {
-    /* TODO:
-     * Gán orderCount = 0
-     * memset mảng orders về 0
-     */
-}
-
-/* =========================================================
  * TẠO PHIẾU SỬA
  * ========================================================= */
 
 int createRepairOrder(void) {
-    /* TODO:
-     * 1. Kiểm tra orderCount < MAX_REPAIR_ORDERS
-     * 2. Nhập SĐT khách hàng
-     * 3. Gọi findCustomerByPhone(); nếu -1 -> báo lỗi "Không tìm thấy khách", return 0
-     * 4. In thông tin khách để xác nhận (printCustomer)
-     * 5. Nhập symptom (không được rỗng)
-     * 6. Khởi tạo phiếu mới: sinh orderId, gán customerPhone, symptom
-     *    status = STATUS_RECEIVED, createdDate = time(NULL), itemCount = 0, totalAmount = 0
-     * 7. Vòng lặp thêm dịch vụ:
-     *    a. Hiển thị danh mục (listAllServices)
-     *    b. Hỏi "Thêm dịch vụ? [1] Có  [0] Xong"
-     *    c. Nếu chọn 1 -> gọi addItemToOrder(orderCount) với phiếu tạm
-     *    d. Lặp cho đến khi chọn 0 hoặc đạt MAX_ITEMS_PER_ORDER
-     * 8. Tăng orderCount
-     * 9. Tăng customers[cIdx].orderCount
-     * 10. Gọi saveOrders() và saveCustomers()
-     * 11. In thông báo thành công + tóm tắt phiếu, return 1
-     */
     int status = 1;
     int index; //vị trí khách hàng trong mảng 
     char phoneNumber[PHONE_LEN];
@@ -61,17 +32,28 @@ int createRepairOrder(void) {
     }
    
     do{
-        printf("Nhap so dien thoai khach hang: ");
+        printf("Nhap so dien thoai khach hang (Nhap Q de quay lai): ");
         scanf("%[^\n]", phoneNumber);
-        
+        while (getchar() != '\n');
+        for(int i = 0; phoneNumber[i] != '\0'; i++){
+            phoneNumber[i] = toupper(phoneNumber[i]);
+        }
+        if(strcmp(phoneNumber,"Q") == 0){
+            return 0;
+        }
+       
         printf("Xac nhan so dien thoai ban muon tim: %s\n", phoneNumber);
         printf("[1] Xac nhan\n");
         printf("[0] Nhap lai\n");
         printf("Nhap lua chon: ");
         scanf("%d", &isConfirm);
-        while (getchar() != '\n');
-        if(findCustomerByPhone(phoneNumber) == -1){
-            printf("Khong ton tai so dien nay nay: %s\n", phoneNumber);
+        while (getchar() != '\n'); 
+
+        if(isConfirm == 0){
+            continue;
+        }
+        else if(findCustomerByPhone(phoneNumber) == -1){
+            printError("Khong ton tai so dien thoai nay!");
         }
         else{
             printf("%-20s %-20s %-20s %-20s %-20s %-20s\n",
@@ -91,9 +73,15 @@ int createRepairOrder(void) {
     strcpy(orders[orderCount].customerPhone, customers[index].phoneNumber);
     char symptom[SYMPTOM_LEN];
     do{
-        printf("Nhap tinh trang xe cua ban: ");
+        printf("Nhap tinh trang xe cua ban (Nhap Q de quay lai): ");
         scanf("%[^\n]", symptom);
         while (getchar() != '\n');
+        for(int i = 0; symptom[i] != '\0'; i++){
+            symptom[i] = toupper(symptom[i]);
+        }
+        if(strcmp(symptom,"Q") == 0){
+            return 0;
+        }
     }
     while(strlen(symptom) == 0);
     strcpy(orders[orderCount].symptom, symptom);
@@ -106,9 +94,15 @@ int createRepairOrder(void) {
     listAllServices();
     char serviceId[ID_LEN];
     do{
-        printf("Nhap ma dich vu can them vao phieu (VD: SV000001), nhap 0 de ket thuc: ");
+        printf("Nhap ma dich vu can them vao phieu (VD: SV000001), nhap 0 de ket thuc, nhap Q de quay lai: ");
         scanf("%[^\n]", serviceId);
         while (getchar() != '\n');
+        for(int i = 0; serviceId[i] != '\0'; i++){
+            serviceId[i] = toupper(serviceId[i]);
+        }
+        if(strcmp(serviceId,"Q") == 0){
+            return 0;
+        }
         if(strcmp(serviceId, "0") == 0){
             break;
         }
@@ -121,29 +115,24 @@ int createRepairOrder(void) {
         
     }
     while(1);
-        
     orderCount++;
     customers[index].orderCount++;
+    createInvoice(orders[orderCount-1].orderId);
+
+
+    
     saveOrders();
     saveCustomers();
-    
-
     printf("Tao phieu thanh cong\n");
     return status;
 }
 
 int addItemToOrder(int orderIdx, int serviceIdx) {
     /* TODO:
-     * 1. Kiểm tra orders[idx].itemCount < MAX_ITEMS_PER_ORDER; nếu đầy -> báo lỗi, return 0
-     * 2. Nhập serviceId
-     * 3. Gọi findServiceById(); nếu -1 -> báo lỗi, return 0
-     * 4. Nhập quantity (phải > 0)
-     * 5. Tạo RepairItem: sao chép serviceId, serviceName, unitPrice từ services[]
-     *    gán quantity, tính subtotal = quantity * unitPrice
-     * 6. Gán item vào orders[idx].items[orders[idx].itemCount]
-     * 7. Tăng orders[idx].itemCount
-     * 8. Cộng subtotal vào orders[idx].totalAmount
-     * 9. return 1
+    
+     * 5.   ms[itemCount++]
+     * 6. orders[idx].totalAmount += subtotal
+     * 7. return 1
      */
     int status = 1; 
     if(orders[orderIdx].itemCount >= MAX_ITEMS_PER_ORDER){
@@ -151,11 +140,16 @@ int addItemToOrder(int orderIdx, int serviceIdx) {
         status = 0;
         return status;
     }   
-    int quantity;
+    int quantity = 0;
     do{
-        printf("Nhap so luong: ");
-        scanf("%d", &quantity);
+        printf("Nhap so luong (0 de huy them DV nay): ");
+        if (scanf("%d", &quantity) != 1) {
+            while(getchar () != '\n');
+            quantity = -1;
+            continue;
+        }
         while(getchar () != '\n');
+        if (quantity == 0) return 0;
     }
     while(quantity <= 0);
     int itemIdx = orders[orderIdx].itemCount;
@@ -187,19 +181,18 @@ int addItemToOrder(int orderIdx, int serviceIdx) {
 
 int updateOrderStatus(void) {
     /* TODO:
-     * 1. Nhập orderId cần cập nhật
-     * 2. Gọi findOrderById(); nếu -1 -> báo lỗi, return 0
-     * 3. Lấy status hiện tại
-     * 4. Nếu status == STATUS_DONE -> báo "Phiếu đã hoàn thành, không thể cập nhật", return 0
-     * 5. In trạng thái hiện tại và trạng thái kế tiếp, hỏi xác nhận
-     * 6. Nếu xác nhận: status++ (tiến một bước), gán updatedDate = time(NULL)
-     * 7. Gọi saveOrders()
-     * 8. In thành công, return 1
+     * 1. Nhập orderId
+     * 2. findOrderById() -> nếu -1 báo lỗi return 0
+     * 3. Nếu status == STATUS_DONE -> cảnh báo "Phieu da hoan thanh", return 0
+     * 4. In trạng thái hiện tại và kế tiếp, hỏi xác nhận
+     * 5. status++; updatedDate = time(NULL)
+     * 6. saveOrders(); printSuccess(); return 1
      */
     char orderId[ID_LEN];
     
-    printf("Nhap ma phieu: ");
+    printf("Nhap ma phieu (0 de quay lai): ");
     readLine(orderId, ID_LEN);
+    if (strcmp(orderId, "0") == 0) return 0;
 
     int idx = findOrderById(orderId);
     if (idx == -1) {
@@ -243,8 +236,8 @@ int updateOrderStatus(void) {
     }
 
     // Update trạng thái
-    o->status++;
-    o->updatedDate = time(NULL);
+  	o->status++; 
+	o->updatedDate = time(NULL);
 
     // Lưu file
     if (!saveOrders()) {
@@ -261,11 +254,6 @@ int updateOrderStatus(void) {
  * ========================================================= */
 
 int findOrderById(const char *orderId) {
-    /* TODO:
-     * Duyệt for từ 0 đến orderCount - 1
-     * Nếu strcmp(orders[i].orderId, orderId) == 0 -> return i
-     * Nếu không tìm thấy -> return -1
-     */
     int left = 0, right = orderCount - 1;
     while(left <= right){
         int mid = left + (right - left) / 2;
@@ -280,21 +268,15 @@ int findOrderById(const char *orderId) {
         }
     }
     return -1;
+
 }
 
 int findOrdersByPhone(const char *phone, int *result, int maxResult) {
-    /* TODO:
-     * Duyệt for; nếu strcmp(orders[i].customerPhone, phone) == 0
-     * và count < maxResult thì gán result[count++] = i
-     * Trả về count
-     */
     int count = 0;
-
     for (int i = 0; i < orderCount; i++) {
         if (count >= maxResult){
             break; 
         }
-
         if (strcmp(orders[i].customerPhone, phone) == 0) {
             result[count] = i; 
             count++;          
@@ -302,20 +284,16 @@ int findOrdersByPhone(const char *phone, int *result, int maxResult) {
     }
     return count; 
 }
-
 int findOrdersByPlate(const char *plate, int *result, int maxResult) {
-    /* TODO:
-     * 1. Gọi findCustomerByPlate(plate) để lấy cIdx
-     * 2. Nếu cIdx == -1 -> return 0
-     * 3. Lấy customers[cIdx].phoneNumber
-     * 4. Gọi findOrdersByPhone(...) với số điện thoại đó
-     * 5. Trả về kết quả
-     */
+    
     int cIdx = findCustomerByPlate(plate);
     if(cIdx == -1) {
         return 0;
     }
+
+    return findOrdersByPhone(customers[cIdx].phoneNumber, result, maxResult); /* placeholder */
 }
+
 
 /* =========================================================
  * HIỂN THỊ
@@ -391,49 +369,87 @@ void listOrders(int statusFilter) {
             char moneyFormatted[30];
             formatDateTime(orders[i].createdDate, dateFormatted);
             formatMoney(orders[i].totalAmount, moneyFormatted);
-            printf("  %-4d %-10s %-15s %-20s %-15s %s\n",
-                   i + 1, orders[i].orderId, orders[i].customerPhone,
-                   dateFormatted, getStatusString(orders[i].status), moneyFormatted);
+            printf("  %-4d %-10s %-15s %-20s ",
+       		i + 1,
+       		orders[i].orderId,
+       		orders[i].customerPhone,
+       		dateFormatted);
+
+			// In status
+			printStatus(orders[i].status);
+
+			// Tính độ dài text KHÔNG có màu
+			int len = strlen(getStatusString(orders[i].status));
+
+			// padding cho đủ 15 ký tự
+			for (int k = 0; k < (15 - len); k++) {
+    		printf(" ");
+			}
+	printf(" %s\n", moneyFormatted);
         }
     }
 }
 
 void viewCustomerHistory(void) {
+
     char phone[PHONE_LEN];
-    printf("Nhap so dien thoai khach hang: ");
-    scanf("%[^\n]", phone);
+
+    printf("Nhap so dien thoai khach hang (0 de quay lai): ");
+
+    // đọc input an toàn
+    fgets(phone, PHONE_LEN, stdin);
+    strTrim(phone); // loại bỏ \n và space
+    if (strcmp(phone, "0") == 0) return;
+
     int index_array[MAX_REPAIR_ORDERS];
     int n = findOrdersByPhone(phone, index_array, MAX_REPAIR_ORDERS);
+
     if (n == 0) {
         printf("Khach hang chua co lich su sua chua.\n");
+        return;
     }
-    else{
-        for(int i = 0; i < n; i++){
-            printOrder(&orders[index_array[i]]);
+
+    int found = 0;
+
+    for (int i = 0; i < n; i++) {
+        RepairOrder *o = &orders[index_array[i]];
+        if (o->status == 2) { // STATUS_DONE
+            printf("\n===== PHIEU SUA CHUA =====\n");
+            printf("  Ma phieu: %s\n", o->orderId);
+            printOrder(o);
+            found = 1;
         }
+    }
+
+    if (!found) {
+        printf("Khach hang co phieu nhung chua hoan thanh.\n");
     }
 }
 
 void searchOrderMenu(void) {
+    // thêm option quay lai cho khách hàng
     int choice;
     do{
         printf("Lua chon tim kiem:\n");
         printf("[1] Tim theo ma phieu\n");
         printf("[2] Tim theo bien so xe\n");
+        printf("[0] Quay lai\n");
         printDivider();
         printf("Nhap lua chon: ");
         scanf("%d", &choice);
         while (getchar() != '\n');
-        if(choice != 1 && choice != 2){
-            printf("Vui long nhap [1] hoac [2]\n");
+        if(choice != 1 && choice != 2 && choice != 0){
+            printf("Vui long nhap [0], [1] hoac [2]\n");
         }
         
     }
-    while(choice != 1 && choice != 2);
+    while(choice != 1 && choice != 2 && choice != 0);
+    if (choice == 0) return;
     if(choice == 1){
         char OrderId[ID_LEN];
-        printf("Nhap ma phieu: ");
-        scanf("%[^\n]", OrderId);
+        printf("Nhap ma phieu (0 de quay lai): ");
+        readLine(OrderId, ID_LEN);
+        if (strcmp(OrderId, "0") == 0) return;
         int idx = findOrderById(OrderId); 
         if(idx == -1){
             printf("Khong tim thay phieu\n");
@@ -444,8 +460,9 @@ void searchOrderMenu(void) {
     }
     else if(choice == 2){
         char plate[PLATE_LEN];
-        printf("Nhap bien so xe: ");
-        scanf("%[^\n]", plate);
+        printf("Nhap bien so xe (0 de quay lai): ");
+        readLine(plate, PLATE_LEN);
+        if (strcmp(plate, "0") == 0) return;
         int idxArr[MAX_REPAIR_ORDERS];
         int n = findOrdersByPlate(plate, idxArr, MAX_REPAIR_ORDERS);
         if(n == 0){

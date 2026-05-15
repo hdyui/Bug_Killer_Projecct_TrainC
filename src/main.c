@@ -24,17 +24,7 @@ static void menuService(void);
 
 int main(void) {
     int choice;
-
-    /* Khởi tạo bộ nhớ */
-    // initCustomers();
-    // initServices();
-    // initOrders();
-
-    /* Đảm bảo thư mục data/ tồn tại rồi tải dữ liệu */
-    // ensureDataDir();
     loadAllData();
-
-    /* Menu chính - vòng lặp chính của chương trình */
     do {
         printHeader("QUAN LY TIEM SUA XE - NHOM BUG KILLER");
         printf("  [1] Quan ly khach hang\n");
@@ -44,27 +34,32 @@ int main(void) {
         printf("  [0] Thoat chuong trinh\n");
         printDivider();
         printf("  Lua chon: ");
-
-        /* TODO: Thay scanf bằng readLine + atoi nếu muốn xử lý input an toàn hơn */
         scanf(" %d", &choice);
-        /* Xoá buffer sau scanf */
         while (getchar() != '\n');
-
         switch (choice) {
-            case 1: menuCustomer(); break;
-            case 2: menuRepair();   break;
-            case 3: menuService();  break;
-            case 4: reportMenu();   break;
+            case 1:
+                menuCustomer(); 
+                break;
+            
+            case 2:
+                menuRepair();   
+                break;
+            
+            case 3:
+                menuService();  
+                break;
+            
+            case 4: 
+                reportMenu();   
+                break;
             case 0:
-                printSuccess("Da luu du lieu. Tam biet!");
                 saveAllData();
+                printSuccess("Da luu du lieu. Tam biet!");
                 break;
             default:
                 printError("Lua chon khong hop le. Vui long thu lai.");
         }
-
     } while (choice != 0);
-
     return 0;
 }
 
@@ -108,41 +103,63 @@ static void menuRepair(void) {
         printf("  [1] Tao phieu sua moi\n");
         printf("  [2] Cap nhat trang thai phieu\n");
         printf("  [3] Xem chi tiet phieu\n");
-        printf("  [4] Xem danh sach tat ca phieu\n");
+        printf("  [4] Xem tat ca phieu\n");
         printf("  [5] Loc phieu theo trang thai\n");
         printf("  [6] Lich su sua chua cua khach hang\n");
         printf("  [7] Tim kiem phieu\n");
         printf("  [0] Quay lai\n");
         printDivider();
         printf("  Lua chon: ");
-        scanf(" %d", &choice);
+        scanf("%d", &choice);
         while (getchar() != '\n');
 
         switch (choice) {
-            case 1: createRepairOrder();  break;
-            case 2: updateOrderStatus();  break;
+            case 1: 
+                createRepairOrder();   
+                break;
+            case 2: 
+                updateOrderStatus();   
+                break;
             case 3: {
                 char oid[ID_LEN];
-                printf("  Nhap ma phieu: ");
+                printf("  Nhap ma phieu (0 de quay lai): ");
                 readLine(oid, ID_LEN);
+                if (strcmp(oid, "0") == 0) break;
                 int idx = findOrderById(oid);
                 if (idx == -1) printError("Khong tim thay phieu.");
                 else printOrder(&orders[idx]);
                 break;
             }
-            case 4: listOrders(-1);       break;
+            case 4: 
+                listOrders(-1);        
+                break;
             case 5: {
-                int st;
-                printf("  Trang thai [0=Tiep nhan, 1=Dang sua, 2=Hoan thanh]: ");
-                scanf(" %d", &st);
+                int st = -1;
+                printf("  Trang thai [0=Tiep nhan, 1=Dang sua, 2=Hoan thanh, 3=Quay lai]: ");
+                if (scanf(" %d", &st) != 1) {
+                    while (getchar() != '\n');
+                    printError("Trang thai khong hop le.");
+                    break;
+                }
                 while (getchar() != '\n');
+                if (st == 3) break;
+                if (st < 0 || st > 2) {
+                    printError("Trang thai khong hop le.");
+                    break;
+                }
                 listOrders(st);
                 break;
             }
-            case 6: viewCustomerHistory(); break;
-            case 7: searchOrderMenu();     break;
-            case 0: break;
-            default: printError("Lua chon khong hop le.");
+            case 6: 
+                viewCustomerHistory(); 
+                break;
+            case 7: 
+                searchOrderMenu();     
+                break;
+            case 0: 
+                break;
+            default: 
+                printError("Lua chon khong hop le.");
         }
     } while (choice != 0);
 }
@@ -165,9 +182,9 @@ static void menuService(void) {
         while (getchar() != '\n');
 
         switch (choice) {
-            case 1: addService();     break;
-            case 2: editService();    break;
-            case 3: listAllServices(); break;
+            case 1: addService();      break;
+            case 2: editService();     break;
+            case 3: loadServices(); listAllServices(); break;
             case 0: break;
             default: printError("Lua chon khong hop le.");
         }
