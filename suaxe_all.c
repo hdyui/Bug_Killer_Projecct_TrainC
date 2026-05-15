@@ -1820,14 +1820,10 @@ void viewCustomerHistory(void) {
 
     for (int i = 0; i < n; i++) {
         RepairOrder *o = &orders[index_array[i]];
-
-        // chỉ lấy phiếu đã hoàn thành
         if (o->status == 2) { // STATUS_DONE
             printf("\n===== PHIEU SUA CHUA =====\n");
-            printf("Ma phieu: %s\n", o->orderId);
-
+            printf("  Ma phieu: %s\n", o->orderId);
             printOrder(o);
-
             found = 1;
         }
     }
@@ -1933,9 +1929,9 @@ void reportDailyRevenue(void) {
 
     printDivider();
     
-    printf("Cu the:\n");
+    printf("  Cu the:\n");
 
-for (int i = 0; i < orderCount; i++) {
+	for (int i = 0; i < orderCount; i++) {
 	RepairOrder *o = &orders[i];
 
     if (o->status != STATUS_DONE) continue;
@@ -1945,13 +1941,14 @@ for (int i = 0; i < orderCount; i++) {
     if (orderDate.tm_mday == day &&
         orderDate.tm_mon  == month &&
         orderDate.tm_year == year) {
-
-        printf(" + %s = %.0f\n", o->orderId, o->totalAmount);
+        char buf[30];
+        formatMoney(o->totalAmount, buf);
+        printf(" + %s = %s\n", o->orderId, buf);
 
         totalRevenue += o->totalAmount;
         totalOrders++;
-    }
-}
+    	}
+	}
 }
 
 void reportTopServices(void) {
@@ -2066,13 +2063,14 @@ int exportInvoice(const char *orderId) {
     struct tm *t = localtime(&now);
     char datetime[64];
     strftime(datetime, sizeof(datetime), "%d/%m/%Y %H:%M:%S", t);
-    
     sprintf(filename, "invoice_%s.txt", orderId);
     FILE *fp = fopen(filename, "w");
     if (fp == NULL) {
         printf("Loi: Khong the tao file %s de ghi hoa don!\n", filename);
         return 0;
     }
+    char bufTotal[30];
+    formatMoney(o->totalAmount, bufTotal);
     fprintf(fp, "========================================================\n");
     fprintf(fp, "                    HOA DON DICH VU                     \n");
     fprintf(fp, "Ngay xuat     : %s\n", datetime);  
@@ -2087,14 +2085,16 @@ int exportInvoice(const char *orderId) {
     fprintf(fp, "--------------------------------------------------------\n");
     for (int i = 0; i < o->itemCount; i++) {
         RepairItem *it = &o->items[i];
-        fprintf(fp, "%-4d | %-25s | %-4d | %-12.0lf\n", 
+        char bufSub[30];
+        formatMoney(it->subtotal, bufSub);
+        fprintf(fp, "%-4d | %-25s | %-4d | %-12s\n", 
                 i + 1, 
                 it->serviceName, 
                 it->quantity, 
-                it->subtotal);
+                bufSub);
     }
     fprintf(fp, "--------------------------------------------------------\n");
-    fprintf(fp, "TONG CONG: %.0lf VND\n", o->totalAmount); 
+    fprintf(fp, "TONG CONG: %s\n", bufTotal); 
     fprintf(fp, "========================================================\n");
     fprintf(fp, "             XIN CAM ON VA HEN GAP LAI!                 \n");
     fclose(fp);
