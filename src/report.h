@@ -1,5 +1,6 @@
 #ifndef REPORT_H
 #define REPORT_H
+#include "models.h"
 
 /* =========================================================
  * report.h - Khai báo hàm thống kê và xuất hóa đơn
@@ -36,5 +37,6 @@ int exportInvoice(const char *orderId);
  * Menu thống kê và xuất hóa đơn.
  */
 void reportMenu(void);
-
+extern Invoice invoices[MAX_REPAIR_ORDERS];
+extern int invoiceCount;
 #endif /* REPORT_H */

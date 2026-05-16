@@ -21,7 +21,7 @@ void initServices(void) {
     serviceCount = 0;
     memset(services, 0, sizeof(services));
 }
-
+int addService(void) {
 /* =========================================================
  * THÊM DỊCH VỤ
  * ========================================================= */
@@ -51,7 +51,8 @@ void initServices(void) {
         if (tempName[0] == '\0') {
             printError("Ten dich vu khong duoc de trong.");
         }
-    } while (tempName[0] == '\0');
+    } 
+    while (tempName[0] == '\0');
 
     /* 3. Nhập đơn giá (phải > 0) */
     do {
@@ -60,7 +61,8 @@ void initServices(void) {
             while (getchar() != '\n'); /* Xóa buffer nếu nhập sai kiểu (chữ) */
             printError("Don gia phai la mot so.");
             tempPrice = -1;
-        } else {
+        } 
+        else {
             while (getchar() != '\n'); /* Xóa buffer sau khi lấy số */
             if (tempPrice == 0) return 0;
             if (tempPrice < 0) {

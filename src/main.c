@@ -4,6 +4,7 @@
  * ========================================================= */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "constants.h"
 #include "utils.h"

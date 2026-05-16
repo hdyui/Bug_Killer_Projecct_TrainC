@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "constants.h"
 #include <stdlib.h>
+#include <string.h>
 
 /* =========================================================
  * TIỆN ÍCH

@@ -28,7 +28,12 @@ int loadCustomers(void);
  * Format: [int count][RepairOrder * count]
  * Trả về 1 thành công, 0 thất bại.
  */
+int    validateOrders(void);
+
+void   debugValidateOrders(void);
 int saveOrders(void);
+int    validateServices(void);
+void   debugValidateServices(void);
 
 /*
  * Đọc dữ liệu từ FILE_ORDERS vào mảng orders[].
@@ -67,5 +72,9 @@ void loadAllData(void);
  * Lưu toàn bộ dữ liệu (gọi save cho cả 3 loại).
  */
 void saveAllData(void);
+
+int validateCustomers(void);
+
+void debugValidateCustomers(void);
 
 #endif /* FILEIO_H */

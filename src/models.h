@@ -56,4 +56,16 @@ typedef struct {
     double     totalAmount;                  /* Tổng tiền (tự tính) */
 } RepairOrder;
 
+typedef struct{
+    char orderId[ID_LEN];
+    char customerName[NAME_LEN];
+    char customerPhone[PHONE_LEN];
+    char carPlate[PLATE_LEN];
+    char carType[CAR_TYPE_LEN];
+    char symptom[SYMPTOM_LEN];
+    time_t createdDate;
+    RepairItem items[MAX_ITEMS_PER_ORDER];
+    int itemCount;
+    double totalAmount;
+} Invoice;
 #endif /* MODELS_H */

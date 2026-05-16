@@ -13,6 +13,8 @@
 #include "utils.h"
 #include "constants.h"
 
+Invoice invoices[MAX_REPAIR_ORDERS];
+int invoiceCount = 0;
 /* =========================================================
  * THỐNG KÊ DOANH THU NGÀY
  * ========================================================= */

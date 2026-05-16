@@ -11,6 +11,7 @@
 #include "fileio.h"
 #include "utils.h"
 #include "constants.h"
+#include <ctype.h>
 
 /* --- Định nghĩa bộ nhớ toàn cục --- */
 RepairOrder orders[MAX_REPAIR_ORDERS];
