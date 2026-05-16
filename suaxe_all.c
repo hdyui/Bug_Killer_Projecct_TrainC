@@ -2104,8 +2104,6 @@ int exportInvoice(const char *orderId) {
 void reportMenu(void) {
     int choice;
     do {
-    	getchar();
-        system("cls");
         printHeader("THONG KE & HOA DON");
         printf("  [1] Doanh thu trong ngay\n");
         printf("  [2] Dich vu ban chay nhat\n");
@@ -2140,8 +2138,6 @@ void reportMenu(void) {
 static void menuCustomer(void) {
     int choice;
     do {
-    	getchar();
-        system("cls");
         printHeader("QUAN LY KHACH HANG");
         printf("  [1] Them khach hang moi\n");
         printf("  [2] Sua thong tin khach hang\n");
@@ -2156,7 +2152,7 @@ static void menuCustomer(void) {
         switch (choice) {
             case 1: addCustomer();        break;
             case 2: editCustomer();       break;
-            case 3: searchCustomerMenu(); getchar(); break;
+            case 3: searchCustomerMenu(); break;
             case 4: listAllCustomers();   break;
             case 0: break;
             default: printError("Lua chon khong hop le.");
@@ -2167,8 +2163,6 @@ static void menuCustomer(void) {
 static void menuRepair(void) {
     int choice;
     do {
-    	getchar();
-        system("cls");
         printHeader("QUAN LY PHIEU SUA CHUA");
         printf("  [1] Tao phieu sua moi\n");
         printf("  [2] Cap nhat trang thai phieu\n");
@@ -2237,8 +2231,6 @@ static void menuRepair(void) {
 static void menuService(void) {
     int choice;
     do {
-    	getchar();
-        system("cls");
         printHeader("QUAN LY DANH MUC DICH VU");
         printf("  [1] Them dich vu moi\n");
         printf("  [2] Sua dich vu\n");
@@ -2267,7 +2259,6 @@ int main(void) {
     int choice;
     loadAllData();
     do {
-    	system("cls");
         printHeader("QUAN LY TIEM SUA XE - NHOM BUG KILLER");
         printf("  [1] Quan ly khach hang\n");
         printf("  [2] Quan ly phieu sua chua\n");
@@ -2280,26 +2271,18 @@ int main(void) {
         while (getchar() != '\n');
         switch (choice) {
             case 1:
-            	getchar();
-            	system("cls");
                 menuCustomer(); 
                 break;
             
             case 2:
-            	getchar();
-            	system("cls");
                 menuRepair();   
                 break;
             
             case 3:
-            	getchar();
-            	system("cls");
                 menuService();  
                 break;
             
             case 4: 
-            	getchar();
-            	system("cls");
                 reportMenu();   
                 break;
             case 0:
