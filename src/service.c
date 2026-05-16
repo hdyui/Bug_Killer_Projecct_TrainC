@@ -16,29 +16,25 @@ int     serviceCount = 0;
 /* =========================================================
  * KHỞI TẠO
  * ========================================================= */
-
+ 
 void initServices(void) {
-    /* TODO:
-     * Gán serviceCount = 0
-     * memset mảng services về 0
-     */
+    serviceCount = 0;
+    memset(services, 0, sizeof(services));
 }
 
 /* =========================================================
  * THÊM DỊCH VỤ
  * ========================================================= */
 
-int addService(void) {
     /* TODO:
      * 1. Kiểm tra serviceCount < MAX_SERVICES
-     * 2. Nhập tên dịch vụ (không được rỗng)
-     * 3. Nhập đơn giá: dùng scanf hoặc readLine rồi atof; đảm bảo > 0
-     * 4. Sinh serviceId bằng generateServiceId(serviceCount + 1, ...)
-     * 5. Gán isActive = 1
-     * 6. Tăng serviceCount
-     * 7. Gọi saveServices()
-     * 8. In thành công, return 1
+     * 2. Nhập tên dịch vụ (không rỗng)
+     * 3. Nhập đơn giá (phải > 0)
+     * 4. generateServiceId(serviceCount + 1, services[serviceCount].serviceId)
+     * 5. Gán isActive = 1; serviceCount++;
+     * 6. saveServices(); printSuccess(); return 1;
      */
+    /* 1. Kiểm tra giới hạn mảng */
     if (serviceCount >= MAX_SERVICES) {
         printError("He thong da day, khong the them dich vu moi.");
         return 0;
@@ -49,8 +45,9 @@ int addService(void) {
 
     /* 2. Nhập tên dịch vụ (không rỗng) */
     do {
-        printf("  Ten dich vu: ");
+        printf("  Ten dich vu (0 de quay lai): ");
         readLine(tempName, SERVICE_NAME_LEN);
+        if (strcmp(tempName, "0") == 0) return 0;
         if (tempName[0] == '\0') {
             printError("Ten dich vu khong duoc de trong.");
         }
@@ -58,14 +55,15 @@ int addService(void) {
 
     /* 3. Nhập đơn giá (phải > 0) */
     do {
-        printf("  Don gia (VND): ");
+        printf("  Don gia (VND, 0 de quay lai): ");
         if (scanf("%lf", &tempPrice) != 1) {
             while (getchar() != '\n'); /* Xóa buffer nếu nhập sai kiểu (chữ) */
             printError("Don gia phai la mot so.");
             tempPrice = -1;
         } else {
             while (getchar() != '\n'); /* Xóa buffer sau khi lấy số */
-            if (tempPrice <= 0) {
+            if (tempPrice == 0) return 0;
+            if (tempPrice < 0) {
                 printError("Don gia phai lon hon 0.");
             }
         }
@@ -75,7 +73,7 @@ int addService(void) {
     strcpy(services[serviceCount].name, tempName);
     services[serviceCount].unitPrice = tempPrice;
     services[serviceCount].isActive = 1;
-    sprintf(services[serviceCount].serviceId, "SV%06d", serviceCount + 1);
+    generateServiceId();
 
     /* 5. Tăng biến đếm và lưu file */
     serviceCount++;
@@ -93,23 +91,21 @@ int addService(void) {
 
 int editService(void) {
     /* TODO:
-     * 1. Hiển thị danh sách dịch vụ (listAllServices)
+     * 1. listAllServices()
      * 2. Nhập serviceId cần sửa
-     * 3. Gọi findServiceById() -> lấy index; nếu -1 báo lỗi, return 0
-     * 4. Hiển thị menu:
-     *    [1] Sửa tên dịch vụ
-     *    [2] Sửa đơn giá
-     *    [0] Huỷ
-     * 5. Nhập và validate giá trị mới
-     * 6. Gọi saveServices()
-     * 7. In thành công, return 1
+     * 3. int idx = findServiceById(id); if (idx == -1) { lỗi; return 0; }
+     * 4. Menu: [1] Sửa tên  [2] Sửa đơn giá  [0] Huỷ
+     * 5. Cập nhật, saveServices(), printSuccess(), return 1
      */
+
+
     listAllServices();
     if (serviceCount == 0) return 0; /* Không có dịch vụ để sửa */
 
     char id[ID_LEN];
-    printf("  Nhap ma dich vu can sua (VD: SV000001): ");
+    printf("  Nhap ma dich vu can sua (0 de quay lai, VD: SV000001): ");
     readLine(id, ID_LEN);
+    if (strcmp(id, "0") == 0) return 0;
 
     int idx = findServiceById(id);
     if (idx == -1) {
@@ -132,8 +128,9 @@ int editService(void) {
     if (choice == 1) {
         char newName[SERVICE_NAME_LEN];
         do {
-            printf("  Ten dich vu moi: ");
+            printf("  Ten dich vu moi (0 de quay lai): ");
             readLine(newName, SERVICE_NAME_LEN);
+            if (strcmp(newName, "0") == 0) return 0;
             if (newName[0] == '\0') {
                 printError("Ten dich vu khong duoc de trong.");
             }
@@ -143,14 +140,15 @@ int editService(void) {
     } else if (choice == 2) {
         double newPrice;
         do {
-            printf("  Don gia moi (VND): ");
+            printf("  Don gia moi (VND, 0 de quay lai): ");
             if (scanf("%lf", &newPrice) != 1) {
                 while (getchar() != '\n');
                 printError("Don gia phai la mot so.");
                 newPrice = -1;
             } else {
                 while (getchar() != '\n');
-                if (newPrice <= 0) {
+                if (newPrice == 0) return 0;
+                if (newPrice < 0) {
                     printError("Don gia phai lon hon 0.");
                 }
             }
@@ -174,6 +172,7 @@ int editService(void) {
     saveServices();
     printSuccess("Da cap nhat thong tin dich vu.");
     return 1;
+
 }
 
 /* =========================================================
@@ -181,12 +180,6 @@ int editService(void) {
  * ========================================================= */
 
 int findServiceById(const char *serviceId) {
-    /* TODO:
-     * Duyệt for từ 0 đến serviceCount - 1
-     * Nếu strcmp(services[i].serviceId, serviceId) == 0 VÀ services[i].isActive == 1
-     *   -> return i
-     * Nếu không tìm thấy, return -1
-     */
     int index = -1;
     for(int i = 0; i < serviceCount; i++){
         if(strcmp(services[i].serviceId, serviceId) == 0){
@@ -203,10 +196,8 @@ int findServiceById(const char *serviceId) {
 
 void listAllServices(void) {
     /* TODO:
-     * 1. Kiểm tra không có dịch vụ nào isActive == 1 -> in thông báo rồi return
-     * 2. In header: STT | Mã DV | Tên dịch vụ | Đơn giá
-     * 3. Duyệt for, chỉ in các services[i].isActive == 1
-     * 4. Dùng formatMoney để in đơn giá đẹp
+     * In header: STT | Mã DV | Tên dịch vụ | Đơn giá
+     * Duyệt for, chỉ in isActive == 1; dùng formatMoney cho đơn giá
      */
     int activeCount = 0;
     for (int i = 0; i < serviceCount; i++) {
