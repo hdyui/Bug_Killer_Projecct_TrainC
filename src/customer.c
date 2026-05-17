@@ -218,6 +218,7 @@ void searchCustomerMenu(void) {
         printf("  Lua chon: ");
         scanf(" %d", &choice);
         while (getchar() != '\n');
+        
         if (choice != 1 && choice != 2 && choice != 0) {
             printError("Lua chon khong hop le.");
         }
@@ -228,20 +229,24 @@ void searchCustomerMenu(void) {
     if (choice == 1) {
     	char phone[PHONE_LEN];
         do {
-        	printf("  Nhap SDT: ");
+        	printf("  Nhap SDT (nhap 0 de quay lai): ");
         	scanf(" %11s", phone);
+            while (getchar() != '\n');
+            if(strcmp(phone, "0") == 0) return;
         	if (!isValidPhone(phone)) {
                 printError("SDT khong hop le.");
             }
 		}
-        while(!isValidPhone(phone));
+        while(!isValidPhone(phone) );
 		idx = findCustomerByPhone(phone);
  
     } else if (choice == 2) {
     	char plate[PLATE_LEN];
         do {
-			printf("  Nhap bien so xe: ");
-        	scanf(" %11s", plate);
+			printf("  Nhap bien so xe (nhap 0 de quay lai): ");
+            scanf(" %11s", plate);
+            while (getchar() != '\n');
+            if(strcmp(plate, "0") == 0) return;
         	if (!isValidPlate(plate)) {
                 printError("Bien so khong hop le.");
             }

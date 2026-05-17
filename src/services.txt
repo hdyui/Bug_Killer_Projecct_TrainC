@@ -11,7 +11,7 @@ Is Active   : 1
 Service ID  : SV000003
 Name        : Thay bugi
 Unit Price  : 100000.00
-Is Active   : 0
+Is Active   : 1
 -----------------------------------
 Service ID  : SV000004
 Name        : Ve sinh loc gio
@@ -49,8 +49,8 @@ Unit Price  : 70000.00
 Is Active   : 1
 -----------------------------------
 Service ID  : SV000011
-Name        : Dich vu bao duong 123
-Unit Price  : 12312312.00
+Name        : Dich vu bao duong toan dien
+Unit Price  : 1200000.00
 Is Active   : 1
 -----------------------------------
 Service ID  : SV000012
@@ -96,60 +96,5 @@ Is Active   : 1
 Service ID  : SV000020
 Name        : Thay ma phanh sau
 Unit Price  : 300000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000021
-Name        : Danh bong son xe
-Unit Price  : 800000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000022
-Name        : Phu ceramic bao ve
-Unit Price  : 3500000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000023
-Name        : Tay o kinh o to
-Unit Price  : 300000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000024
-Name        : Khu mui dieu hoa
-Unit Price  : 250000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000025
-Name        : Thay cao su gat mua
-Unit Price  : 120000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000026
-Name        : Boc da vo lang
-Unit Price  : 200000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000027
-Name        : Thay binh acquy 12V
-Unit Price  : 1200000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000028
-Name        : Doc loi ECU xoa loi
-Unit Price  : 200000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000029
-Name        : Ve sinh buong dot
-Unit Price  : 450000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000030
-Name        : Thay day curoa
-Unit Price  : 600000.00
-Is Active   : 1
------------------------------------
-Service ID  : SV000031
-Name        : asd
-Unit Price  : 12312132.00
 Is Active   : 1
 -----------------------------------
