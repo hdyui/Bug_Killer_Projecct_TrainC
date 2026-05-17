@@ -46,5 +46,4 @@ Bug_Killer_Project_TrainC/
 ├── customers.txt
 ├── orders.txt
 ├── services.txt
-├── suaxe_all.c
 ├── README.md
