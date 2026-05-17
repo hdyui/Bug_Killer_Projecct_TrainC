@@ -1,43 +1,50 @@
-📋 Project Overview
-A terminal-based management system built in pure C for a motorbike repair shop. The system replaces manual paper records with a structured program that manages customers, repair orders, and service catalogs — with full data persistence across sessions.
-Team: Bug Killer
-Mentor: Nguyễn Đức Bảo Lâm
-Timeline: 17/04/2026 – 17/05/2026
-Language: C (C99 standard, no external libraries)
+# Bug Killer - Vehicle Repair Shop Management System
 
-✨ Features
-Customer Management
+## Project Description
+Bug Killer is a console-based Vehicle Repair Shop Management System developed in C for the Project Train-C program organized by the F-Code Academic Club at FPT University HCMC.
 
-Add new customers with name, phone number, license plate, and vehicle type
-Edit customer information (name, plate, vehicle type)
-Search by phone number or license plate
-View full customer list
+The system helps repair shops manage:
+- Customer information
+- Repair orders
+- Service catalogs
+- Invoice exporting
+- Revenue reports
+- Repair history tracking
 
-Repair Order Management
+The project focuses on applying:
+- Structured programming
+- File handling
+- Data validation
+- Searching algorithms
+- Modular programming design
 
-Create repair orders linked to a customer phone number
-Add services from catalog to each order (up to 10 services per order)
-Auto-generate order ID (RO000001, RO000002, ...)
-Update order status: Received → Repairing → Done (one-way only)
-View order details with full service breakdown and total amount
-Filter orders by status
-View full repair history of a customer
-Search orders by order ID or license plate
+---
 
-Service Catalog
+## Features
+- Add, edit, search, and list customers
+- Manage repair services and service pricing
+- Create and update repair orders
+- Track repair order status
+- Export invoices to text files
+- Generate revenue and top-service reports
+- Persistent data storage using text files
 
-Add and edit services with name and unit price
-Auto-generate service ID (SV000001, SV000002, ...)
-View all active services
+---
 
-Reports (bonus features)
+## Technologies Used
+- Language: C (C99 Standard)
+- Compiler: GCC
+- File Handling: `stdio.h`
+- Time Management: `time.h`
 
-Daily revenue summary from completed orders
-Top services ranked by usage count
-Export invoice to .txt file
+---
 
-Data Persistence
-
-All data saved to binary files after every operation
-Auto-loaded on startup — no data loss on unexpected shutdown
-
+## Project Structure
+```bash
+Bug_Killer_Project_TrainC/
+│
+├── customers.txt
+├── orders.txt
+├── services.txt
+├── suaxe_all.c
+├── README.md
