@@ -36,6 +36,8 @@ int exportInvoice(const char *orderId);
 /*
  * Menu thống kê và xuất hóa đơn.
  */
+int createInvoice(const char * orderId);
+
 void reportMenu(void);
 extern Invoice invoices[MAX_REPAIR_ORDERS];
 extern int invoiceCount;

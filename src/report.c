@@ -136,37 +136,37 @@ void reportTopServices(void) {
  * XUẤT HÓA ĐƠN
  * ========================================================= */
 
-//int createInvoice(const char * orderId){
-//    int orderIdx = findOrderById(orderId);
-//    if(orderIdx == -1){
-//        printError("Khong tim thay phieu!");
-//        return 0;
-//    }
-//    int customerIdx = findCustomerByPhone(orders[orderIdx].customerPhone);
-//    if(customerIdx == -1){
-//        printError("Khong tim thay khach hang!");
-//        return 0;
-//    }
-//    strcpy(invoices[invoiceCount].orderId, orders[orderIdx].orderId);
-//    strcpy(invoices[invoiceCount].customerName, customers[customerIdx].fullName);
-//    strcpy(invoices[invoiceCount].customerPhone, customers[customerIdx].phoneNumber);
-//    strcpy(invoices[invoiceCount].carType, customers[customerIdx].carType);
-//    strcpy(invoices[invoiceCount].symptom, orders[orderIdx].symptom);
-//    strcpy(invoices[invoiceCount].carPlate, customers[customerIdx].carPlate);
-//    for(int i = 0; i < orders[orderIdx].itemCount; i++){
-//        strcpy(invoices[invoiceCount].items[i].serviceId, orders[orderIdx].items[i].serviceId);
-//        strcpy(invoices[invoiceCount].items[i].serviceName, orders[orderIdx].items[i].serviceName);
-//        invoices[invoiceCount].items[i].quantity = orders[orderIdx].items[i].quantity;
-//        invoices[invoiceCount].items[i].unitPrice = orders[orderIdx].items[i].unitPrice;
-//        invoices[invoiceCount].items[i].subtotal = orders[orderIdx].items[i].subtotal;
-//    }
-//    invoices[invoiceCount].createdDate = time(NULL);
-//    invoices[invoiceCount].itemCount = orders[orderIdx].itemCount;
-//    invoices[invoiceCount].totalAmount = orders[orderIdx].totalAmount;
-//    invoiceCount++;
-//    printSuccess("Da tao hoa don trong he thong. Vui long chon [3] trong menu thong ke & hoa don de xuat hoa don ra file.");
-//    return 1;
-//}
+int createInvoice(const char * orderId){
+   int orderIdx = findOrderById(orderId);
+   if(orderIdx == -1){
+       printError("Khong tim thay phieu!");
+       return 0;
+   }
+   int customerIdx = findCustomerByPhone(orders[orderIdx].customerPhone);
+   if(customerIdx == -1){
+       printError("Khong tim thay khach hang!");
+       return 0;
+   }
+   strcpy(invoices[invoiceCount].orderId, orders[orderIdx].orderId);
+   strcpy(invoices[invoiceCount].customerName, customers[customerIdx].fullName);
+   strcpy(invoices[invoiceCount].customerPhone, customers[customerIdx].phoneNumber);
+   strcpy(invoices[invoiceCount].carType, customers[customerIdx].carType);
+   strcpy(invoices[invoiceCount].symptom, orders[orderIdx].symptom);
+   strcpy(invoices[invoiceCount].carPlate, customers[customerIdx].carPlate);
+   for(int i = 0; i < orders[orderIdx].itemCount; i++){
+       strcpy(invoices[invoiceCount].items[i].serviceId, orders[orderIdx].items[i].serviceId);
+       strcpy(invoices[invoiceCount].items[i].serviceName, orders[orderIdx].items[i].serviceName);
+       invoices[invoiceCount].items[i].quantity = orders[orderIdx].items[i].quantity;
+       invoices[invoiceCount].items[i].unitPrice = orders[orderIdx].items[i].unitPrice;
+       invoices[invoiceCount].items[i].subtotal = orders[orderIdx].items[i].subtotal;
+   }
+   invoices[invoiceCount].createdDate = time(NULL);
+   invoices[invoiceCount].itemCount = orders[orderIdx].itemCount;
+   invoices[invoiceCount].totalAmount = orders[orderIdx].totalAmount;
+   invoiceCount++;
+   printSuccess("Da tao hoa don trong he thong. Vui long chon [3] trong menu thong ke & hoa don de xuat hoa don ra file.");
+   return 1;
+}
 int exportInvoice(const char *orderId) {
     int orderIndex = findOrderById(orderId);
     if (orderIndex == -1) {

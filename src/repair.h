@@ -92,5 +92,4 @@ void viewCustomerHistory(void);
 void searchOrderMenu(void);
 
 
-int createInvoice(const char * orderId);
 #endif /* REPAIR_H */
